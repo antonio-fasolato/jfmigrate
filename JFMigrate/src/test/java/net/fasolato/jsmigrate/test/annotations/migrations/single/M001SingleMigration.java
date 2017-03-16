@@ -6,7 +6,7 @@ import net.fasolato.jfmigrate.Migration;
 /**
  * Created by fasolato on 16/03/2017.
  */
-@Migration(number = 1)
+@Migration(number = 1, description = "Single migration")
 public class M001SingleMigration implements IMigration {
     public void up() {
 
