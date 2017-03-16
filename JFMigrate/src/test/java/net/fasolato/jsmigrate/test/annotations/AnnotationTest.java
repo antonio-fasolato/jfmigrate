@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Created by fasolato on 16/03/2017.
  */
-public class MigrationTest {
+public class AnnotationTest {
     @Test
     public void getSingleMigration() {
         String pkg = "net.fasolato.jsmigrate.test.annotations.migrations.single";
