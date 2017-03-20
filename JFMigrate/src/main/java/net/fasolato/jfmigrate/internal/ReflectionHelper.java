@@ -1,7 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.IMigration;
-import net.fasolato.jfmigrate.Main;
 import net.fasolato.jfmigrate.Migration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
