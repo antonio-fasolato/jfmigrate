@@ -2,9 +2,12 @@ package net.fasolato.jfmigrate;
 
 import net.fasolato.jfmigrate.builders.Column;
 import net.fasolato.jfmigrate.builders.Table;
+import net.fasolato.jfmigrate.internal.IDialectHelper;
 import net.fasolato.jfmigrate.internal.ReflectionHelper;
+import net.fasolato.jfmigrate.internal.SqlServerDialectHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +19,10 @@ public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
 
     private List<String> packages;
+    private SqlDialect dialect;
 
-    public JFMigrate() {
+    public JFMigrate(SqlDialect dialect) {
+        this.dialect = dialect;
         packages = new ArrayList<String>();
     }
 
@@ -29,7 +34,18 @@ public class JFMigrate {
         packages.add(clazz.getPackage().getName());
     }
 
+    private IDialectHelper getDialectHelper() {
+        switch (dialect) {
+            case SQL_SERVER:
+                return new SqlServerDialectHelper();
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
     public void migrateUp() throws Exception {
+        IDialectHelper helper = getDialectHelper();
+
         for (String p : packages) {
             log.debug("Migrating up from package {}", p);
             for (IMigration m : ReflectionHelper.getAllMigrations(p)) {
@@ -37,10 +53,8 @@ public class JFMigrate {
                 m.up();
 
                 for (Table t : m.getDatabase().getNewTables()) {
-                    log.debug("Create table {}", t.getName());
-                    for (Column c : t.getColumns()) {
-                        log.debug("   Column: {} {}", c.getName(), c.getType());
-                    }
+                    String command = helper.tableCreation(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
+                    log.debug(command);
                 }
 
                 log.debug("Applied migration {}", m.getClass().getSimpleName());
@@ -49,6 +63,8 @@ public class JFMigrate {
     }
 
     public void migrateDown() throws Exception {
+        IDialectHelper helper = getDialectHelper();
+
         for (String p : packages) {
             log.debug("Migrating down from package {}", p);
             for (IMigration m : ReflectionHelper.getAllMigrations(p)) {
@@ -56,7 +72,8 @@ public class JFMigrate {
                 m.down();
 
                 for (Table t : m.getDatabase().getRemovedTables()) {
-                    log.debug("Drop table {}", t.getName());
+                    String command = helper.tableDropping(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
+                    log.debug(command);
                 }
 
                 log.debug("Applied migration {}", m.getClass().getSimpleName());

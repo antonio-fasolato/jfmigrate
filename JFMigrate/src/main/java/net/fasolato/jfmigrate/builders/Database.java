@@ -9,10 +9,22 @@ import java.util.List;
 public class Database {
     private List<Table> newTables;
     private List<Table> removedTables;
+    private String databaseName;
+    private String schemaName;
 
     public Database() {
         newTables = new ArrayList<Table>();
         removedTables = new ArrayList<Table>();
+    }
+
+    public Database databaseName(String name) {
+        databaseName = name;
+        return this;
+    }
+
+    public Database schemaName(String name) {
+        schemaName = name;
+        return this;
     }
 
     public Table createTable(String name) {
@@ -32,5 +44,13 @@ public class Database {
 
     public List<Table> getRemovedTables() {
         return removedTables;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
+    public String getSchemaName() {
+        return schemaName;
     }
 }

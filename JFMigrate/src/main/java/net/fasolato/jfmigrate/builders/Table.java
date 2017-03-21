@@ -15,8 +15,23 @@ public class Table {
 
     private List<Column> columns;
 
+    public Table addColumn(String name, JDBCType type, Integer precision, Integer scale, boolean nullable, boolean primaryKey, boolean unique, ForeignKey foreignKey) {
+        columns.add(new Column(name, type, precision, scale, nullable, primaryKey, unique, foreignKey));
+        return this;
+    }
+
     public Table addColumn(String name, JDBCType type) {
-        columns.add(new Column(name, type));
+        columns.add(new Column(name, type, null, null, true, false, false, null));
+        return this;
+    }
+
+    public Table addColumn(String name, JDBCType type, boolean primaryKey) {
+        columns.add(new Column(name, type, null, null, true, primaryKey, false, null));
+        return this;
+    }
+
+    public Table addColumn(String name, JDBCType type, Integer precision, Integer scale) {
+        columns.add(new Column(name, type, precision, scale, true, false, false, null));
         return this;
     }
 
