@@ -11,4 +11,12 @@ public abstract class JFMigration implements IMigration {
     public JFMigration() {
         database = new Database();
     }
+
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
+    }
 }
