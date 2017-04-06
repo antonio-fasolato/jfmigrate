@@ -7,55 +7,102 @@ import java.sql.JDBCType;
  */
 public class Column {
     private String name;
+    private String tableName;
+    private String newName;
+    private boolean primaryKey;
+    private boolean unique;
+    private boolean nullable;
+    private boolean identity;
+    private Object defaultValue;
     private JDBCType type;
     private Integer precision;
     private Integer scale;
-    private boolean nullable;
-    private boolean primaryKey;
-    private boolean unique;
-    private ForeignKey foreignKey;
 
-    public Column(String name, JDBCType type, Integer precision, Integer scale, boolean nullable, boolean primaryKey, boolean unique, ForeignKey foreignKey) {
+    public Column(String name) {
         this.name = name;
-        this.type = type;
-        this.precision = precision;
-        this.scale = scale;
-        this.nullable = nullable;
-        this.primaryKey = primaryKey;
-        this.unique = unique;
-        this.foreignKey = foreignKey;
-
     }
 
     public String getName() {
         return name;
     }
 
-    public JDBCType getType() {
-        return type;
-    }
-
-    public boolean isNullable() {
-        return nullable;
-    }
-
     public boolean isPrimaryKey() {
         return primaryKey;
     }
 
-    public Integer getPrecision() {
-        return precision;
-    }
-
-    public Integer getScale() {
-        return scale;
+    public void setPrimaryKey(boolean primaryKey) {
+        this.primaryKey = primaryKey;
     }
 
     public boolean isUnique() {
         return unique;
     }
 
-    public ForeignKey getForeignKey() {
-        return foreignKey;
+    public void setUnique(boolean unique) {
+        this.unique = unique;
+    }
+
+    public boolean isNullable() {
+        return nullable;
+    }
+
+    public void setNullable(boolean nullable) {
+        this.nullable = nullable;
+    }
+
+    public boolean isIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(boolean identity) {
+        this.identity = identity;
+    }
+
+    public Object getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(Object defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
+    public JDBCType getType() {
+        return type;
+    }
+
+    public void setType(JDBCType type) {
+        this.type = type;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public void setPrecision(Integer precision) {
+        this.precision = precision;
+    }
+
+    public Integer getScale() {
+        return scale;
+    }
+
+    public void setScale(Integer scale) {
+        this.scale = scale;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public String getNewName() {
+        return newName;
+    }
+
+    public void setNewName(String newName) {
+        this.newName = newName;
     }
 }

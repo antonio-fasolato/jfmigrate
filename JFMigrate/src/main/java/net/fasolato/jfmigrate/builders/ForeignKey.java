@@ -1,22 +1,51 @@
 package net.fasolato.jfmigrate.builders;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by fasolato on 21/03/2017.
  */
 public class ForeignKey {
-    private String tableName;
-    private String columnName;
+    private String fromTable;
+    private List<String> foreignColumns;
+    private String toTable;
+    private List<String> primaryKeys;
 
-    public ForeignKey(String tableName, String columnName) {
-        this.tableName = tableName;
-        this.columnName = columnName;
+    public ForeignKey() {
+        foreignColumns = new ArrayList<String>();
+        primaryKeys = new ArrayList<String>();
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getFromTable() {
+        return fromTable;
     }
 
-    public String getColumnName() {
-        return columnName;
+    public void setFromTable(String fromTable) {
+        this.fromTable = fromTable;
+    }
+
+    public List<String> getForeignColumns() {
+        return foreignColumns;
+    }
+
+    public void setForeignColumns(List<String> foreignColumns) {
+        this.foreignColumns = foreignColumns;
+    }
+
+    public String getToTable() {
+        return toTable;
+    }
+
+    public void setToTable(String toTable) {
+        this.toTable = toTable;
+    }
+
+    public List<String> getPrimaryKeys() {
+        return primaryKeys;
+    }
+
+    public void setPrimaryKeys(List<String> primaryKeys) {
+        this.primaryKeys = primaryKeys;
     }
 }
