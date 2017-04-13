@@ -245,4 +245,20 @@ public class Table {
     public void setNewName(String newName) {
         this.newName = newName;
     }
+
+    public List<Column> getAddedColumns() {
+        return addedColumns;
+    }
+
+    public List<Column> getAlteredColumns() {
+        return alteredColumns;
+    }
+
+    public List<ForeignKey> getAddedForeignKeys() {
+        return addedForeignKeys;
+    }
+
+    public List<Index> getCreatedIndexes() {
+        return createdIndexes;
+    }
 }

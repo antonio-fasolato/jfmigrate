@@ -112,4 +112,40 @@ public class JFMigrationFluent {
         commands.add(sql);
         return null;
     }
+
+    public List<Table> getAddedTables() {
+        return addedTables;
+    }
+
+    public List<Table> getAlteredTables() {
+        return alteredTables;
+    }
+
+    public List<Table> getRenamedTables() {
+        return renamedTables;
+    }
+
+    public List<Column> getRenamedColumns() {
+        return renamedColumns;
+    }
+
+    public List<Table> getCreatedIndexes() {
+        return createdIndexes;
+    }
+
+    public List<Table> getDeletedTables() {
+        return deletedTables;
+    }
+
+    public List<Column> getDeletedColumns() {
+        return deletedColumns;
+    }
+
+    public List<String> getCommands() {
+        return commands;
+    }
+
+    public List<String> getScripts() {
+        return scripts;
+    }
 }
