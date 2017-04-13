@@ -7,6 +7,38 @@ import net.fasolato.jfmigrate.builders.Table;
  * Created by fasolato on 21/03/2017.
  */
 public class SqlServerDialectHelper implements IDialectHelper {
+    public String getDatabaseVersionCommand() {
+        String sql = "";
+
+        sql += "IF (EXISTS (";
+        sql += "	SELECT * ";
+        sql += "    FROM INFORMATION_SCHEMA.TABLES ";
+        sql += "    WHERE 1 = 1";
+//        sql += "		and TABLE_SCHEMA = 'dbo' ";
+        sql += "        AND  TABLE_NAME = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'";
+        sql += "	))";
+        sql += "    select isnull(max(version), 0) as version from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += "else";
+        sql += "	select -1 as version";
+
+        return sql;
+    }
+
+    public String getVersionTableCreationCommand() {
+        String sql = "";
+
+        sql += "CREATE TABLE [dbo].[" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "](";
+        sql += "	[version] [int] NOT NULL,";
+        sql += "	[appliedat] [datetime] NOT NULL,";
+        sql += "	[migrationname] [nvarchar](255) NOT NULL,";
+        sql += " CONSTRAINT [PK_jfmigratedbversion] PRIMARY KEY CLUSTERED ";
+        sql += "(";
+        sql += "	[version] ASC";
+        sql += "))";
+
+        return sql;
+    }
+
     public String tableCreation(String databaseName, String schemaName, Table t) {
         String sql = "";
 

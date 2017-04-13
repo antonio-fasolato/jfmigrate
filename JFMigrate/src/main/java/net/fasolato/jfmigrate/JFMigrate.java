@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate;
 
+import net.fasolato.jfmigrate.internal.DatabaseHelper;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
 import net.fasolato.jfmigrate.internal.ReflectionHelper;
 import net.fasolato.jfmigrate.internal.SqlServerDialectHelper;
@@ -7,6 +8,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,40 +46,126 @@ public class JFMigrate {
         }
     }
 
+    private int getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
+        String currentVersionCommand = helper.getDatabaseVersionCommand();
+
+        log.info("Executing {}", currentVersionCommand);
+        PreparedStatement st = conn.prepareStatement(currentVersionCommand);
+        ResultSet rs = st.executeQuery();
+        int dbVersion = -1;
+        if (rs.next()) {
+            dbVersion = rs.getInt(1);
+        }
+        return dbVersion;
+    }
+
+    private void createVersionTable(IDialectHelper helper, Connection conn) throws SQLException {
+        String createCommand = helper.getVersionTableCreationCommand();
+
+        log.info("Executing {}", createCommand);
+        PreparedStatement st = conn.prepareStatement(createCommand);
+        st.executeUpdate();
+
+    }
+
     public void migrateUp() throws Exception {
         IDialectHelper helper = getDialectHelper();
+        DatabaseHelper dbHelper = new DatabaseHelper();
 
-        for (String p : packages) {
-            log.debug("Migrating up from package {}", p);
-            for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
-                log.debug("Applying migration {}", m.getClass().getSimpleName());
-                m.up();
+        Connection conn = null;
+        try {
+            conn = dbHelper.getConnection();
+            conn.setAutoCommit(false);
+
+            int dbVersion = getDatabaseVersion(helper, conn);
+            log.info("Current database version: {}", dbVersion);
+
+            if (dbVersion == -1) {
+                //No migration table, it must be created
+                createVersionTable(helper, conn);
+            }
+
+            for (String p : packages) {
+                log.debug("Migrating up from package {}", p);
+                for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
+                    log.debug("Applying migration {}", m.getClass().getSimpleName());
+                    m.up();
 
 //                for (Table t : m.getDatabase().getNewTables()) {
 //                    String command = helper.tableCreation(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
 //                    log.debug(command);
 //                }
 
-                log.debug("Applied migration {}", m.getClass().getSimpleName());
+                    log.debug("Applied migration {}", m.getClass().getSimpleName());
+                }
+            }
+
+            conn.commit();
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback();
+                log.error("Connection rolled back");
+            }
+            log.error(e);
+            throw e;
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                log.error(ex);
             }
         }
     }
 
     public void migrateDown() throws Exception {
         IDialectHelper helper = getDialectHelper();
+        DatabaseHelper dbHelper = new DatabaseHelper();
 
-        for (String p : packages) {
-            log.debug("Migrating down from package {}", p);
-            for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
-                log.debug("Applying migration {}", m.getClass().getSimpleName());
-                m.down();
+        Connection conn = null;
+        try {
+            conn = dbHelper.getConnection();
+            conn.setAutoCommit(false);
+
+            int dbVersion = getDatabaseVersion(helper, conn);
+            log.info("Current database version: {}", dbVersion);
+
+            if (dbVersion <= 0) {
+                //No migration table or DB is at first migration, nothing to be done
+                return;
+            }
+
+            for (String p : packages) {
+                log.debug("Migrating down from package {}", p);
+                for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
+                    log.debug("Applying migration {}", m.getClass().getSimpleName());
+                    m.down();
 
 //                for (Table t : m.getDatabase().getRemovedTables()) {
 //                    String command = helper.tableDropping(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
 //                    log.debug(command);
 //                }
 
-                log.debug("Applied migration {}", m.getClass().getSimpleName());
+                    log.debug("Applied migration {}", m.getClass().getSimpleName());
+                }
+            }
+
+            conn.commit();
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback();
+                log.error("Connection rolled back");
+            }
+            log.error(e);
+            throw e;
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                log.error(ex);
             }
         }
     }
