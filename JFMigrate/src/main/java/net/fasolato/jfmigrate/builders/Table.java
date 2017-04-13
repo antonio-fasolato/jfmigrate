@@ -78,7 +78,7 @@ public class Table {
     }
     /* Alter column */
 
-    public Table primaryKey() throws JFException {
+    public Table primaryKey() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -98,7 +98,7 @@ public class Table {
         return this;
     }
 
-    public Table fromTable(String tableName) throws JFException {
+    public Table fromTable(String tableName) {
         if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
@@ -107,7 +107,7 @@ public class Table {
         return this;
     }
 
-    public Table toTable(String tableName) throws JFException {
+    public Table toTable(String tableName) {
         if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
@@ -116,7 +116,7 @@ public class Table {
         return this;
     }
 
-    public Table foreignColumn(String columnName) throws JFException {
+    public Table foreignColumn(String columnName) {
         if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
@@ -125,7 +125,7 @@ public class Table {
         return this;
     }
 
-    public Table primaryColumn(String columnName) throws JFException {
+    public Table primaryColumn(String columnName) {
         if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
@@ -145,7 +145,7 @@ public class Table {
         return this;
     }
 
-    public Table withIndexedColumn(String columnName) throws JFException {
+    public Table withIndexedColumn(String columnName) {
         if (createdIndexes == null || createdIndexes.isEmpty()) {
             throw new JFException("No index defined");
         }
@@ -156,7 +156,7 @@ public class Table {
     /* Indexes */
 
     /* Columns */
-    public Table unique() throws JFException {
+    public Table unique() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -165,7 +165,7 @@ public class Table {
         return this;
     }
 
-    public Table nullable() throws JFException {
+    public Table nullable() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -174,7 +174,7 @@ public class Table {
         return this;
     }
 
-    public Table notNullable() throws JFException {
+    public Table notNullable() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -183,7 +183,7 @@ public class Table {
         return this;
     }
 
-    public Table identity() throws JFException {
+    public Table identity() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -192,7 +192,7 @@ public class Table {
         return this;
     }
 
-    public Table defaultValue(Object val) throws JFException {
+    public Table defaultValue(Object val) {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -202,7 +202,7 @@ public class Table {
     }
 
     /* Type definitions */
-    public Table asInteger() throws JFException {
+    public Table asInteger() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -212,7 +212,7 @@ public class Table {
         return this;
     }
 
-    public Table asString() throws JFException {
+    public Table asString() {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
@@ -222,7 +222,7 @@ public class Table {
         return this;
     }
 
-    public Table as(JDBCType t) throws JFException {
+    public Table as(JDBCType t) {
         if (currentColumn == null) {
             throw new JFException("No column defined");
         }
