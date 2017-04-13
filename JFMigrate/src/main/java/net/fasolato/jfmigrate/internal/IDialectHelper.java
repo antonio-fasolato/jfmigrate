@@ -8,6 +8,7 @@ import net.fasolato.jfmigrate.builders.Table;
 public interface IDialectHelper {
     String getDatabaseVersionCommand();
     String getVersionTableCreationCommand();
+    String getInsertNewVersionCommand();
     String tableCreation(String databaseName, String schemaName, Table t);
 
     String tableDropping(String databaseName, String schemaName, Table t);

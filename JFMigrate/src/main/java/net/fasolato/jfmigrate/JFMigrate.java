@@ -8,10 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,15 +85,30 @@ public class JFMigrate {
             for (String p : packages) {
                 log.debug("Migrating up from package {}", p);
                 for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
-                    log.debug("Applying migration {}", m.getClass().getSimpleName());
-                    m.up();
+                    if (m.getMigrationNumber() > dbVersion) {
+                        log.debug("Applying migration {}({})", m.getMigrationName(), m.getMigrationNumber());
+                        m.up();
 
+                        Savepoint save = conn.setSavepoint();
+                        try {
 //                for (Table t : m.getDatabase().getNewTables()) {
 //                    String command = helper.tableCreation(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
 //                    log.debug(command);
 //                }
+                            String migrationVersionCommand = helper.getInsertNewVersionCommand();
+                            PreparedStatement st = conn.prepareStatement(migrationVersionCommand);
+                            st.setInt(1, m.getMigrationNumber());
+                            st.setString(2, m.getMigrationName());
+                            st.executeUpdate();
 
-                    log.debug("Applied migration {}", m.getClass().getSimpleName());
+                            log.debug("Applied migration {}", m.getClass().getSimpleName());
+                        } catch (Exception e) {
+                            conn.rollback(save);
+                            log.error(e);
+                        }
+                    } else {
+                        log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
+                    }
                 }
             }
 

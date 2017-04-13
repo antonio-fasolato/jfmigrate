@@ -39,6 +39,17 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return sql;
     }
 
+    public String getInsertNewVersionCommand() {
+        String sql = "";
+
+        sql += "insert into " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += "	(version, appliedat, migrationname)";
+        sql += "values";
+        sql += "	(?, GETDATE(), ?)";
+
+        return sql;
+    }
+
     public String tableCreation(String databaseName, String schemaName, Table t) {
         String sql = "";
 
