@@ -1,8 +1,6 @@
 package net.fasolato.jfmigrate.builders;
 
-import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +9,14 @@ import java.util.List;
  * Created by fasolato on 04/04/2017.
  */
 public class Index implements Change {
+    private String name;
     private String tableName;
     private List<String> columns;
+    private boolean unique;
     private OperationType operationType;
 
-    public Index(OperationType operationType) {
+    public Index(String name, OperationType operationType) {
+        this.name = name;
         this.operationType = operationType;
         columns = new ArrayList<String>();
     }
@@ -25,8 +26,23 @@ public class Index implements Change {
         return this;
     }
 
+    public Index fromTable(String tableName) {
+        this.tableName = tableName;
+        return this;
+    }
+
+    public Index unique() {
+        this.unique = true;
+        return this;
+    }
+
     public String[] getSqlCommand(IDialectHelper helper) {
-        throw new NotImplementedException();
+        switch (operationType) {
+            case create:
+                return helper.getIndexCreationCommand(this);
+            default:
+                return new String[]{};
+        }
     }
 
     public String getTableName() {
@@ -51,5 +67,21 @@ public class Index implements Change {
 
     public void setOperationType(OperationType operationType) {
         this.operationType = operationType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isUnique() {
+        return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
     }
 }

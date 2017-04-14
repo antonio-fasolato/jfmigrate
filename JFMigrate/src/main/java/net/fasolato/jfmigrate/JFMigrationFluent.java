@@ -42,9 +42,8 @@ public class JFMigrationFluent {
         return null;
     }
 
-    public Index createIndex(String tableName) {
-        Index i = new Index(OperationType.create);
-        i.setTableName(tableName);
+    public Index createIndex(String name) {
+        Index i = new Index(name, OperationType.create);
         changes.add(i);
         return i;
     }

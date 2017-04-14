@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
 
 /**
@@ -7,9 +8,14 @@ import net.fasolato.jfmigrate.builders.Table;
  */
 public interface IDialectHelper {
     String getDatabaseVersionCommand();
+
     String getVersionTableCreationCommand();
+
     String getInsertNewVersionCommand();
+
     String[] getTableCreationCommand(Table t);
+
+    String[] getIndexCreationCommand(Index i);
 
     String tableDropping(String databaseName, String schemaName, Table t);
 }
