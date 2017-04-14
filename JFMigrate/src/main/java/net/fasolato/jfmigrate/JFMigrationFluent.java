@@ -61,6 +61,12 @@ public class JFMigrationFluent {
         return c;
     }
 
+    public Index deleteIndex(String name) {
+        Index i = new Index(name, OperationType.delete);
+        changes.add(i);
+        return i;
+    }
+
     public RawSql executeScript(String script) {
         RawSql r = new RawSql(script, true);
         changes.add(r);

@@ -22,14 +22,13 @@ public class Table implements Change {
     public Table(String name, OperationType operationType) {
         this.name = name;
         this.operationType = operationType;
+        addedColumns = new ArrayList<Column>();
+        alteredColumns = new ArrayList<Column>();
+        addedForeignKeys = new ArrayList<ForeignKey>();
     }
 
     /* new column */
     public Table withColumn(String columnName) {
-        if (addedColumns == null) {
-            addedColumns = new ArrayList<Column>();
-        }
-
         Column c = new Column(columnName, OperationType.create);
         addedColumns.add(c);
         currentColumn = c;
@@ -37,10 +36,6 @@ public class Table implements Change {
     }
 
     public Table withIdColumn() {
-        if (addedColumns == null) {
-            addedColumns = new ArrayList<Column>();
-        }
-
         Column c = new Column("id", OperationType.create);
         c.setType(JDBCType.INTEGER);
         addedColumns.add(c);
@@ -58,10 +53,6 @@ public class Table implements Change {
 
     /* Alter column */
     public Table addColumn(String columnName) {
-        if (addedColumns == null) {
-            addedColumns = new ArrayList<Column>();
-        }
-
         Column c = new Column(columnName, OperationType.create);
         addedColumns.add(c);
         currentColumn = c;
@@ -69,10 +60,6 @@ public class Table implements Change {
     }
 
     public Table alterColumn(String columnName) {
-        if (alteredColumns == null) {
-            alteredColumns = new ArrayList<Column>();
-        }
-
         Column c = new Column(columnName, OperationType.alter);
         alteredColumns.add(c);
         currentColumn = c;
@@ -81,27 +68,19 @@ public class Table implements Change {
     /* Alter column */
 
     public Table primaryKey() {
-        if (currentColumn == null) {
-            throw new JFException("No column defined");
-        }
-
         currentColumn.setPrimaryKey(true);
         return this;
     }
 
     /* Foreign key */
     public Table foreignKey(String keyName) {
-        if (addedForeignKeys == null) {
-            addedForeignKeys = new ArrayList<ForeignKey>();
-        }
-
         ForeignKey k = new ForeignKey(keyName);
         addedForeignKeys.add(k);
         return this;
     }
 
     public Table fromTable(String tableName) {
-        if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
+        if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
@@ -110,7 +89,7 @@ public class Table implements Change {
     }
 
     public Table toTable(String tableName) {
-        if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
+        if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
@@ -119,7 +98,7 @@ public class Table implements Change {
     }
 
     public Table foreignColumn(String columnName) {
-        if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
+        if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
@@ -128,7 +107,7 @@ public class Table implements Change {
     }
 
     public Table primaryColumn(String columnName) {
-        if (addedForeignKeys == null || addedForeignKeys.isEmpty()) {
+        if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
@@ -218,8 +197,10 @@ public class Table implements Change {
         switch (operationType) {
             case create:
                 return helper.getTableCreationCommand(this);
+            case delete:
+                return helper.getTableDropCommand(this);
             default:
-                return new String[] {};
+                return new String[]{};
         }
     }
 

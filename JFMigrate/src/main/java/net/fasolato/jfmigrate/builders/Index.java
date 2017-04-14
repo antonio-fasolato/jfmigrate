@@ -40,6 +40,8 @@ public class Index implements Change {
         switch (operationType) {
             case create:
                 return helper.getIndexCreationCommand(this);
+            case delete:
+                return helper.getIndexDropCommand(this);
             default:
                 return new String[]{};
         }

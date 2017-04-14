@@ -107,8 +107,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 }
             }
             sql += ") ";
+            toReturn.add(sql);
         }
-        toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
     }
@@ -134,15 +134,19 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public String tableDropping(String databaseName, String schemaName, Table t) {
+    public String[] getTableDropCommand(Table t) {
         String sql = "";
 
-//        sql += " DROP TABLE ";
-//        sql += databaseName != null ? databaseName + "." : "";
-//        sql += schemaName != null ? schemaName + "." : "";
-//        sql += t.getName();
-//        sql += ";";
+        sql += " DROP TABLE " + t.getName() + " ;";
 
-        return sql;
+        return new String[]{sql};
+    }
+
+    public String[] getIndexDropCommand(Index i) {
+        String sql = "";
+
+        sql += " DROP INDEX " + i.getName() + " ON " + i.getTableName() + " ;";
+
+        return new String[]{sql};
     }
 }

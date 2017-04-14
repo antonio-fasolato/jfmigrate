@@ -17,5 +17,7 @@ public interface IDialectHelper {
 
     String[] getIndexCreationCommand(Index i);
 
-    String tableDropping(String databaseName, String schemaName, Table t);
+    String[] getTableDropCommand(Table t);
+
+    String[] getIndexDropCommand(Index i);
 }

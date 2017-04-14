@@ -6,9 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by fasolato on 16/03/2017.
@@ -31,6 +29,13 @@ public class ReflectionHelper {
                 migrations.add((JFMigrationClass) c.newInstance());
             }
         }
+
+        Collections.sort(migrations, new Comparator<JFMigrationClass>() {
+            public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
+                return Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
+            }
+        });
+
         return migrations;
     }
 }
