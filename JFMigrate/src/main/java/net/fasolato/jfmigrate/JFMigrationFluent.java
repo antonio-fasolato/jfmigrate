@@ -1,7 +1,6 @@
 package net.fasolato.jfmigrate;
 
-import net.fasolato.jfmigrate.builders.Column;
-import net.fasolato.jfmigrate.builders.Table;
+import net.fasolato.jfmigrate.builders.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,142 +9,72 @@ import java.util.List;
  * Created by fasolato on 04/04/2017.
  */
 public class JFMigrationFluent {
-    private List<Table> addedTables;
-    private List<Table> alteredTables;
-    private List<Table> renamedTables;
-    private List<Column> renamedColumns;
-    private List<Table> createdIndexes;
-    private List<Table> deletedTables;
-    private List<Column> deletedColumns;
-    private List<String> commands;
-    private List<String> scripts;
+    private List<Change> changes;
+
+    public JFMigrationFluent() {
+        changes = new ArrayList<Change>();
+    }
 
     public Table createTable(String tableName) {
-        if (addedTables == null) {
-            addedTables = new ArrayList<Table>();
-        }
-
-        Table t = new Table(tableName);
-        addedTables.add(t);
+        Table t = new Table(tableName, OperationType.create);
+        changes.add(t);
         return t;
     }
 
     public Table alterTable(String tableName) {
-        if (alteredTables == null) {
-            alteredTables = new ArrayList<Table>();
-        }
-
-        Table t = new Table(tableName);
-        alteredTables.add(t);
+        Table t = new Table(tableName, OperationType.alter);
+        changes.add(t);
         return t;
     }
 
     public Table renameTable(String tableName, String newName) {
-        if (renamedTables == null) {
-            renamedTables = new ArrayList<Table>();
-        }
-
-        Table t = new Table(tableName);
+        Table t = new Table(tableName, OperationType.rename);
         t.setNewName(newName);
-        renamedTables.add(t);
+        changes.add(t);
         return t;
     }
 
     public Table renameColumn(String tableName, String columnName, String newColumnName) {
-        if (renamedColumns == null) {
-            renamedColumns = new ArrayList<Column>();
-        }
-
-        Column c = new Column(columnName);
+        Column c = new Column(columnName, OperationType.rename);
         c.setTableName(tableName);
         c.setNewName(newColumnName);
-        renamedColumns.add(c);
+        changes.add(c);
         return null;
     }
 
-    public Table createIndex(String tableName) {
-        if (createdIndexes == null) {
-            createdIndexes = new ArrayList<Table>();
-        }
-
-        Table t = new Table(tableName);
-        t.createIndex();
-        createdIndexes.add(t);
-        return t;
+    public Index createIndex(String tableName) {
+        Index i = new Index(OperationType.create);
+        i.setTableName(tableName);
+        changes.add(i);
+        return i;
     }
 
     public Table deleteTable(String tableName) {
-        if (deletedTables == null) {
-            deletedTables = new ArrayList<Table>();
-        }
-
-        Table t = new Table(tableName);
-        deletedTables.add(t);
+        Table t = new Table(tableName, OperationType.delete);
+        changes.add(t);
         return t;
     }
 
-    public Table deleteColumn(String tableName, String columnName) {
-        if (deletedColumns == null) {
-            deletedColumns = new ArrayList<Column>();
-        }
-
-        Column c = new Column(columnName);
+    public Column deleteColumn(String tableName, String columnName) {
+        Column c = new Column(columnName, OperationType.delete);
         c.setTableName(tableName);
-        deletedColumns.add(c);
-        return null;
+        changes.add(c);
+        return c;
     }
 
-    public Table executeScript(String script) {
-        if (scripts == null) {
-            scripts = new ArrayList<String>();
-        }
-
-        scripts.add(script);
-        return null;
+    public RawSql executeScript(String script) {
+        RawSql r = new RawSql(script, true);
+        changes.add(r);
+        return r;
     }
 
-    public Table executeSql(String sql) {
-        if (commands == null) {
-            commands = new ArrayList<String>();
-        }
-
-        commands.add(sql);
-        return null;
+    public RawSql executeSql(String sql) {
+        RawSql r = new RawSql(sql, false);
+        changes.add(r);
+        return r;
     }
 
-    public List<Table> getAddedTables() {
-        return addedTables;
-    }
-
-    public List<Table> getAlteredTables() {
-        return alteredTables;
-    }
-
-    public List<Table> getRenamedTables() {
-        return renamedTables;
-    }
-
-    public List<Column> getRenamedColumns() {
-        return renamedColumns;
-    }
-
-    public List<Table> getCreatedIndexes() {
-        return createdIndexes;
-    }
-
-    public List<Table> getDeletedTables() {
-        return deletedTables;
-    }
-
-    public List<Column> getDeletedColumns() {
-        return deletedColumns;
-    }
-
-    public List<String> getCommands() {
-        return commands;
-    }
-
-    public List<String> getScripts() {
-        return scripts;
+    public List<Change> getChanges() {
+        return changes;
     }
 }

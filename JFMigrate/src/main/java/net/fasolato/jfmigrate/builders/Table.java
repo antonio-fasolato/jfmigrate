@@ -9,17 +9,19 @@ import java.util.List;
 /**
  * Created by fasolato on 20/03/2017.
  */
-public class Table {
+public class Table implements Change {
     private String name;
     private String newName;
+    private OperationType operationType;
     private List<Column> addedColumns;
     private List<Column> alteredColumns;
     private Column currentColumn;
     private List<ForeignKey> addedForeignKeys;
     private List<Index> createdIndexes;
 
-    public Table(String name) {
+    public Table(String name, OperationType operationType) {
         this.name = name;
+        this.operationType = operationType;
     }
 
     /* new column */
@@ -28,7 +30,7 @@ public class Table {
             addedColumns = new ArrayList<Column>();
         }
 
-        Column c = new Column(columnName);
+        Column c = new Column(columnName, OperationType.create);
         addedColumns.add(c);
         currentColumn = c;
         return this;
@@ -39,7 +41,7 @@ public class Table {
             addedColumns = new ArrayList<Column>();
         }
 
-        Column c = new Column("id");
+        Column c = new Column("id", OperationType.create);
         c.setType(JDBCType.INTEGER);
         addedColumns.add(c);
         currentColumn = c;
@@ -60,7 +62,7 @@ public class Table {
             addedColumns = new ArrayList<Column>();
         }
 
-        Column c = new Column(columnName);
+        Column c = new Column(columnName, OperationType.create);
         addedColumns.add(c);
         currentColumn = c;
         return this;
@@ -71,7 +73,7 @@ public class Table {
             alteredColumns = new ArrayList<Column>();
         }
 
-        Column c = new Column(columnName);
+        Column c = new Column(columnName, OperationType.alter);
         alteredColumns.add(c);
         currentColumn = c;
         return this;
@@ -134,26 +136,6 @@ public class Table {
         return this;
     }
     /* Foreign key */
-
-    /* Indexes */
-    public Table createIndex() {
-        if (createdIndexes == null) {
-            createdIndexes = new ArrayList<Index>();
-        }
-
-        createdIndexes.add(new Index());
-        return this;
-    }
-
-    public Table withIndexedColumn(String columnName) {
-        if (createdIndexes == null || createdIndexes.isEmpty()) {
-            throw new JFException("No index defined");
-        }
-
-        createdIndexes.get(createdIndexes.size() - 1).getColumns().add(columnName);
-        return this;
-    }
-    /* Indexes */
 
     /* Columns */
     public Table unique() {
@@ -260,5 +242,13 @@ public class Table {
 
     public List<Index> getCreatedIndexes() {
         return createdIndexes;
+    }
+
+    public OperationType getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(OperationType operationType) {
+        this.operationType = operationType;
     }
 }

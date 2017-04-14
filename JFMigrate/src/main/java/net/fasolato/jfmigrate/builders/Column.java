@@ -5,10 +5,11 @@ import java.sql.JDBCType;
 /**
  * Created by fasolato on 20/03/2017.
  */
-public class Column {
+public class Column implements Change {
     private String name;
     private String tableName;
     private String newName;
+    private OperationType operationType;
     private boolean primaryKey;
     private boolean unique;
     private boolean nullable;
@@ -18,8 +19,9 @@ public class Column {
     private Integer precision;
     private Integer scale;
 
-    public Column(String name) {
+    public Column(String name, OperationType operationType) {
         this.name = name;
+        this.operationType = operationType;
     }
 
     public String getName() {
@@ -104,5 +106,13 @@ public class Column {
 
     public void setNewName(String newName) {
         this.newName = newName;
+    }
+
+    public OperationType getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(OperationType operationType) {
+        this.operationType = operationType;
     }
 }

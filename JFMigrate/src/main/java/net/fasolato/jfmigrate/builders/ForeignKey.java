@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by fasolato on 21/03/2017.
  */
-public class ForeignKey {
+public class ForeignKey implements Change {
     private String fromTable;
     private List<String> foreignColumns;
     private String toTable;
