@@ -1,5 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
+import net.fasolato.jfmigrate.internal.IDialectHelper;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 /**
  * Created by fasolato on 14/04/2017.
  */
@@ -11,6 +14,11 @@ public class RawSql implements Change {
         this.rawSql = rawSql;
         this.script = script;
     }
+
+    public String[] getSqlCommand(IDialectHelper helper) {
+        throw new NotImplementedException();
+    }
+
 
     public String getRawSql() {
         return rawSql;

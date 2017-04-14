@@ -1,5 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
+import net.fasolato.jfmigrate.internal.IDialectHelper;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.sql.JDBCType;
 
 /**
@@ -22,6 +25,10 @@ public class Column implements Change {
     public Column(String name, OperationType operationType) {
         this.name = name;
         this.operationType = operationType;
+    }
+
+    public String[] getSqlCommand(IDialectHelper helper) {
+        throw new NotImplementedException();
     }
 
     public String getName() {
@@ -115,4 +122,5 @@ public class Column implements Change {
     public void setOperationType(OperationType operationType) {
         this.operationType = operationType;
     }
+
 }

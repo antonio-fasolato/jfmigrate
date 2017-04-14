@@ -1,5 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
+import net.fasolato.jfmigrate.internal.IDialectHelper;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,10 @@ public class ForeignKey implements Change {
     public ForeignKey() {
         foreignColumns = new ArrayList<String>();
         primaryKeys = new ArrayList<String>();
+    }
+
+    public String[] getSqlCommand(IDialectHelper helper) {
+        throw new NotImplementedException();
     }
 
     public String getFromTable() {

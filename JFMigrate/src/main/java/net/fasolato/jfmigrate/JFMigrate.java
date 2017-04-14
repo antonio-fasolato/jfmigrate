@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate;
 
+import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.internal.DatabaseHelper;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
 import net.fasolato.jfmigrate.internal.ReflectionHelper;
@@ -90,13 +91,18 @@ public class JFMigrate {
                         m.up();
 
                         Savepoint save = conn.setSavepoint();
+                        PreparedStatement st;
                         try {
-//                for (Table t : m.getDatabase().getNewTables()) {
-//                    String command = helper.tableCreation(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
-//                    log.debug(command);
-//                }
+                            for (Change c : m.migration.getChanges()) {
+                                for (String sql : c.getSqlCommand(helper)) {
+                                    log.info("Executing: {}", sql);
+                                    st = conn.prepareStatement(sql);
+                                    st.executeUpdate();
+                                }
+                            }
+
                             String migrationVersionCommand = helper.getInsertNewVersionCommand();
-                            PreparedStatement st = conn.prepareStatement(migrationVersionCommand);
+                            st = conn.prepareStatement(migrationVersionCommand);
                             st.setInt(1, m.getMigrationNumber());
                             st.setString(2, m.getMigrationName());
                             st.executeUpdate();

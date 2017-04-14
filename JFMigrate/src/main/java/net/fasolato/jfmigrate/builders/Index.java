@@ -1,6 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFException;
+import net.fasolato.jfmigrate.internal.IDialectHelper;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,10 @@ public class Index implements Change {
     public Index withIndexedColumn(String columnName) {
         getColumns().add(columnName);
         return this;
+    }
+
+    public String[] getSqlCommand(IDialectHelper helper) {
+        throw new NotImplementedException();
     }
 
     public String getTableName() {

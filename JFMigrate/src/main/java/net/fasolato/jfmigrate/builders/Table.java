@@ -1,6 +1,7 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFException;
+import net.fasolato.jfmigrate.internal.IDialectHelper;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -213,6 +214,16 @@ public class Table implements Change {
 
         return this;
     }
+
+    public String[] getSqlCommand(IDialectHelper helper) {
+        switch (operationType) {
+            case create:
+                return helper.getTableCreationCommand(this);
+            default:
+                return new String[] {};
+        }
+    }
+
     /* Type definitions */
     /* Columns */
 
