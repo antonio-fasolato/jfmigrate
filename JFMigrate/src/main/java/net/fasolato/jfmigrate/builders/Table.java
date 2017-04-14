@@ -18,7 +18,6 @@ public class Table implements Change {
     private List<Column> alteredColumns;
     private Column currentColumn;
     private List<ForeignKey> addedForeignKeys;
-    private List<Index> createdIndexes;
 
     public Table(String name, OperationType operationType) {
         this.name = name;
@@ -91,12 +90,12 @@ public class Table implements Change {
     }
 
     /* Foreign key */
-    public Table foreignKey() {
+    public Table foreignKey(String keyName) {
         if (addedForeignKeys == null) {
             addedForeignKeys = new ArrayList<ForeignKey>();
         }
 
-        ForeignKey k = new ForeignKey();
+        ForeignKey k = new ForeignKey(keyName);
         addedForeignKeys.add(k);
         return this;
     }
@@ -249,10 +248,6 @@ public class Table implements Change {
 
     public List<ForeignKey> getAddedForeignKeys() {
         return addedForeignKeys;
-    }
-
-    public List<Index> getCreatedIndexes() {
-        return createdIndexes;
     }
 
     public OperationType getOperationType() {

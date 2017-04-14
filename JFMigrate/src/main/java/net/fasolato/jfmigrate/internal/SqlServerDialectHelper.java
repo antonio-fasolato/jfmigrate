@@ -1,6 +1,7 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.Column;
+import net.fasolato.jfmigrate.builders.ForeignKey;
 import net.fasolato.jfmigrate.builders.Table;
 
 import java.util.ArrayList;
@@ -77,14 +78,36 @@ public class SqlServerDialectHelper implements IDialectHelper {
 //                sql += c.getForeignKey().getColumnName() != null ? "(" + c.getForeignKey().getColumnName() + ")" : "";
 //                sql += " ";
 //            }
-            if(i < t.getAddedColumns().size()) {
+            if (i < t.getAddedColumns().size()) {
                 sql += ", ";
             }
         }
         sql += " );";
         toReturn.add(sql);
 
-        //TODO: foreign keys
+        for (ForeignKey k : t.getAddedForeignKeys()) {
+            sql = "";
+            sql += "ALTER TABLE " + k.getFromTable() + " ";
+            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
+            for (i = 0; i < k.getForeignColumns().size(); i++) {
+                String c = k.getForeignColumns().get(i);
+                sql += " " + c;
+                if (i < k.getForeignColumns().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += ") ";
+            sql += "    REFERENCES " + k.getToTable() + " ( ";
+            for (i = 0; i < k.getPrimaryKeys().size(); i++) {
+                String c = k.getPrimaryKeys().get(i);
+                sql += " " + c;
+                if (i < k.getPrimaryKeys().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += ") ";
+        }
+        toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
     }

@@ -10,12 +10,14 @@ import java.util.List;
  * Created by fasolato on 21/03/2017.
  */
 public class ForeignKey implements Change {
+    private String name;
     private String fromTable;
     private List<String> foreignColumns;
     private String toTable;
     private List<String> primaryKeys;
 
-    public ForeignKey() {
+    public ForeignKey(String name) {
+        this.name = name;
         foreignColumns = new ArrayList<String>();
         primaryKeys = new ArrayList<String>();
     }
@@ -54,5 +56,13 @@ public class ForeignKey implements Change {
 
     public void setPrimaryKeys(List<String> primaryKeys) {
         this.primaryKeys = primaryKeys;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
