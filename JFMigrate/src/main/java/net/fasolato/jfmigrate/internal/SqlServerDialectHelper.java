@@ -170,4 +170,13 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
         return new String[]{sql};
     }
+
+    public String[] getColumnRenameCommand(Column c) {
+        String sql = "";
+
+        log.error("Warning: Microsoft recommends dropping and recreating the table not to break scripts and stored procedures. See https://docs.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-rename-transact-sql");
+        sql += " EXEC sp_rename '" + c.getTableName() + "." + c.getName() + "' , '" + c.getNewName() + "', 'COLUMN' ;";
+
+        return new String[]{sql};
+    }
 }

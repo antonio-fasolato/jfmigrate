@@ -31,6 +31,8 @@ public class Column implements Change {
         switch (operationType) {
             case delete:
                 return helper.getColumnDropCommand(this);
+            case rename:
+                return helper.getColumnRenameCommand(this);
             default:
                 return new String[]{};
         }
