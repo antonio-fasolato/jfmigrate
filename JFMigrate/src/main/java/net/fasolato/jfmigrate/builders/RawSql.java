@@ -16,7 +16,7 @@ public class RawSql implements Change {
     }
 
     public String[] getSqlCommand(IDialectHelper helper) {
-        throw new NotImplementedException();
+        return new String[]{rawSql};
     }
 
 
