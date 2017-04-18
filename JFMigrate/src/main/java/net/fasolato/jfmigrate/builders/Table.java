@@ -14,32 +14,27 @@ public class Table implements Change {
     private String name;
     private String newName;
     private OperationType operationType;
-    private List<Column> addedColumns;
-    private List<Column> alteredColumns;
-    private Column currentColumn;
+    private List<Column> changes;
     private List<ForeignKey> addedForeignKeys;
 
     public Table(String name, OperationType operationType) {
         this.name = name;
         this.operationType = operationType;
-        addedColumns = new ArrayList<Column>();
-        alteredColumns = new ArrayList<Column>();
         addedForeignKeys = new ArrayList<ForeignKey>();
+        changes = new ArrayList<Column>();
     }
 
     /* new column */
     public Table withColumn(String columnName) {
         Column c = new Column(columnName, OperationType.create);
-        addedColumns.add(c);
-        currentColumn = c;
+        changes.add(c);
         return this;
     }
 
     public Table withIdColumn() {
         Column c = new Column("id", OperationType.create);
         c.setType(JDBCType.INTEGER);
-        addedColumns.add(c);
-        currentColumn = c;
+        changes.add(c);
 
         try {
             this.primaryKey();
@@ -54,21 +49,22 @@ public class Table implements Change {
     /* Alter column */
     public Table addColumn(String columnName) {
         Column c = new Column(columnName, OperationType.create);
-        addedColumns.add(c);
-        currentColumn = c;
+        changes.add(c);
         return this;
     }
 
     public Table alterColumn(String columnName) {
         Column c = new Column(columnName, OperationType.alter);
-        alteredColumns.add(c);
-        currentColumn = c;
+        changes.add(c);
         return this;
     }
     /* Alter column */
 
     public Table primaryKey() {
-        currentColumn.setPrimaryKey(true);
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+        changes.get(changes.size() - 1).setPrimaryKey(true);
         return this;
     }
 
@@ -118,77 +114,77 @@ public class Table implements Change {
 
     /* Columns */
     public Table unique() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setUnique(true);
+        changes.get(changes.size() - 1).setUnique(true);
         return this;
     }
 
     public Table nullable() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setNullable(true);
+        changes.get(changes.size() - 1).setNullable(true);
         return this;
     }
 
     public Table notNullable() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setNullable(false);
+        changes.get(changes.size() - 1).setNullable(false);
         return this;
     }
 
     public Table identity() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setIdentity(true);
+        changes.get(changes.size() - 1).setIdentity(true);
         return this;
     }
 
     public Table defaultValue(Object val) {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setDefaultValue(val);
+        changes.get(changes.size() - 1).setDefaultValue(val);
         return this;
     }
 
     /* Type definitions */
     public Table asInteger() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setType(JDBCType.INTEGER);
+        changes.get(changes.size() - 1).setType(JDBCType.INTEGER);
 
         return this;
     }
 
     public Table asString() {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setType(JDBCType.VARCHAR);
+        changes.get(changes.size() - 1).setType(JDBCType.VARCHAR);
 
         return this;
     }
 
     public Table as(JDBCType t) {
-        if (currentColumn == null) {
+        if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        currentColumn.setType(t);
+        changes.get(changes.size() - 1).setType(t);
 
         return this;
     }
@@ -201,6 +197,8 @@ public class Table implements Change {
                 return helper.getTableDropCommand(this);
             case rename:
                 return helper.getTableRenameCommand(this);
+            case alter:
+                return helper.getAlterTableCommand(this);
             default:
                 return new String[]{};
         }
@@ -221,14 +219,6 @@ public class Table implements Change {
         this.newName = newName;
     }
 
-    public List<Column> getAddedColumns() {
-        return addedColumns;
-    }
-
-    public List<Column> getAlteredColumns() {
-        return alteredColumns;
-    }
-
     public List<ForeignKey> getAddedForeignKeys() {
         return addedForeignKeys;
     }
@@ -239,5 +229,9 @@ public class Table implements Change {
 
     public void setOperationType(OperationType operationType) {
         this.operationType = operationType;
+    }
+
+    public List<Column> getChanges() {
+        return changes;
     }
 }

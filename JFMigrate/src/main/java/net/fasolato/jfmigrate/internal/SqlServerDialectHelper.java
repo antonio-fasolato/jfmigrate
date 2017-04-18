@@ -1,9 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
-import net.fasolato.jfmigrate.builders.Column;
-import net.fasolato.jfmigrate.builders.ForeignKey;
-import net.fasolato.jfmigrate.builders.Index;
-import net.fasolato.jfmigrate.builders.Table;
+import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,24 +64,21 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += t.getName();
         sql += " ( ";
         int i = 0;
-        for (Column c : t.getAddedColumns()) {
+        for (Column c : t.getChanges()) {
             i++;
-            sql += c.getName() + " " + c.getType() + " ";
-            if (c.getPrecision() != null) {
-                sql += "(" + c.getPrecision();
-                sql += c.getScale() != null ? "," + c.getScale() : "";
-                sql += ")";
-            }
-            sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-            sql += c.isUnique() ? " UNIQUE " : "";
-            sql += c.isNullable() ? "" : " NOT NULL ";
-//            if (c.getForeignKey() != null) {
-//                sql += " FOREIGN KEY REFERENCES " + c.getForeignKey().getTableName();
-//                sql += c.getForeignKey().getColumnName() != null ? "(" + c.getForeignKey().getColumnName() + ")" : "";
-//                sql += " ";
-//            }
-            if (i < t.getAddedColumns().size()) {
-                sql += ", ";
+            if (c.getOperationType() == OperationType.create) {
+                sql += c.getName() + " " + c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+                if (i < t.getChanges().size()) {
+                    sql += ", ";
+                }
             }
         }
         sql += " );";
@@ -178,5 +172,43 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += " EXEC sp_rename '" + c.getTableName() + "." + c.getName() + "' , '" + c.getNewName() + "', 'COLUMN' ;";
 
         return new String[]{sql};
+    }
+
+    public String[] getAlterTableCommand(Table t) {
+        List<String> toReturn = new ArrayList<String>();
+
+        for (Column c : t.getChanges()) {
+            String sql = "";
+            if (c.getOperationType() == OperationType.create) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ADD ";
+                sql += c.getName() + " " + c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            } else if (c.getOperationType() == OperationType.alter) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ALTER COLUMN ";
+                sql += c.getName() + " " + c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            }
+            toReturn.add(sql);
+        }
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 }
