@@ -28,7 +28,12 @@ public class Column implements Change {
     }
 
     public String[] getSqlCommand(IDialectHelper helper) {
-        throw new NotImplementedException();
+        switch (operationType) {
+            case delete:
+                return helper.getColumnDropCommand(this);
+            default:
+                return new String[]{};
+        }
     }
 
     public String getName() {

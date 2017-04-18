@@ -149,4 +149,12 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
         return new String[]{sql};
     }
+
+    public String[] getColumnDropCommand(Column c) {
+        String sql = "";
+
+        sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
+
+        return new String[]{sql};
+    }
 }

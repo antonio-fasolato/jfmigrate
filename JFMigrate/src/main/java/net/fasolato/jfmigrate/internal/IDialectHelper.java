@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.builders.Column;
 import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
 
@@ -20,4 +21,6 @@ public interface IDialectHelper {
     String[] getTableDropCommand(Table t);
 
     String[] getIndexDropCommand(Index i);
+
+    String[] getColumnDropCommand(Column c);
 }
