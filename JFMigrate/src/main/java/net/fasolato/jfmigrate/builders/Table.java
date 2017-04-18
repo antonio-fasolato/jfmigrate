@@ -199,6 +199,8 @@ public class Table implements Change {
                 return helper.getTableCreationCommand(this);
             case delete:
                 return helper.getTableDropCommand(this);
+            case rename:
+                return helper.getTableRenameCommand(this);
             default:
                 return new String[]{};
         }

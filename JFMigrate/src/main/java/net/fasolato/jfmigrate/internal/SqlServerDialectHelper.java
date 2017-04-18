@@ -4,6 +4,8 @@ import net.fasolato.jfmigrate.builders.Column;
 import net.fasolato.jfmigrate.builders.ForeignKey;
 import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.List;
  * Created by fasolato on 21/03/2017.
  */
 public class SqlServerDialectHelper implements IDialectHelper {
+    private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
+
     public String getDatabaseVersionCommand() {
         String sql = "";
 
@@ -154,6 +158,15 @@ public class SqlServerDialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
+
+        return new String[]{sql};
+    }
+
+    public String[] getTableRenameCommand(Table t) {
+        String sql = "";
+
+        log.error("Warning: Microsoft recommends dropping and recreating the table not to break scripts and stored procedures. See https://docs.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-rename-transact-sql");
+        sql += " EXEC sp_rename '" + t.getName() + "' , '" + t.getNewName() + "' ;";
 
         return new String[]{sql};
     }

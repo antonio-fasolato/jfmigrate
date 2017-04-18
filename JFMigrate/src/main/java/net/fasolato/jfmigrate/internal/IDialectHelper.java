@@ -23,4 +23,6 @@ public interface IDialectHelper {
     String[] getIndexDropCommand(Index i);
 
     String[] getColumnDropCommand(Column c);
+
+    String[] getTableRenameCommand(Table t);
 }
