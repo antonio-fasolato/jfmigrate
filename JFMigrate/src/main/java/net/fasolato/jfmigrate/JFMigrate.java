@@ -1,16 +1,15 @@
 package net.fasolato.jfmigrate;
 
 import net.fasolato.jfmigrate.builders.Change;
-import net.fasolato.jfmigrate.internal.DatabaseHelper;
-import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.ReflectionHelper;
-import net.fasolato.jfmigrate.internal.SqlServerDialectHelper;
+import net.fasolato.jfmigrate.internal.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -85,9 +84,17 @@ public class JFMigrate {
 
             for (String p : packages) {
                 log.debug("Migrating up from package {}", p);
-                for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
+
+                List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
+                Collections.sort(migrations, new Comparator<JFMigrationClass>() {
+                    public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
+                        return Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
+                    }
+                });
+
+                for (JFMigrationClass m : migrations) {
                     if (m.getMigrationNumber() > dbVersion) {
-                        log.debug("Applying migration {}({})", m.getMigrationName(), m.getMigrationNumber());
+                        log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
                         Savepoint save = conn.setSavepoint();
@@ -110,7 +117,7 @@ public class JFMigrate {
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
                             conn.rollback(save);
-                            log.error(e);
+                            throw e;
                         }
                     } else {
                         log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
@@ -137,7 +144,7 @@ public class JFMigrate {
         }
     }
 
-    public void migrateDown() throws Exception {
+    public void migrateDown(int targetMigration) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -156,16 +163,58 @@ public class JFMigrate {
 
             for (String p : packages) {
                 log.debug("Migrating down from package {}", p);
-                for (JFMigrationClass m : ReflectionHelper.getAllMigrations(p)) {
-                    log.debug("Applying migration {}", m.getClass().getSimpleName());
-                    m.down();
+
+                List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
+                Collections.sort(migrations, new Comparator<JFMigrationClass>() {
+                    public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
+                        return -1 * Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
+                    }
+                });
+
+                for (JFMigrationClass m : migrations) {
+                    if (m.getMigrationNumber() <= dbVersion && m.getMigrationNumber() > targetMigration) {
+                        log.debug("Applying migration DOWN {}({})", m.getMigrationName(), m.getMigrationNumber());
+                        m.down();
+
+                        Savepoint save = conn.setSavepoint();
+                        PreparedStatement st;
+                        try {
+                            String testVersionSql = helper.getSearchDatabaseVersionCommand();
+                            st = conn.prepareStatement(testVersionSql);
+                            st.setInt(1, m.getMigrationNumber());
+                            log.debug("Executing {}", testVersionSql);
+                            ResultSet rs = st.executeQuery();
+                            if (!rs.next()) {
+                                throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
+                            }
+
+                            for (Change c : m.migration.getChanges()) {
+                                for (String sql : c.getSqlCommand(helper)) {
+                                    log.info("Executing: {}", sql);
+                                    st = conn.prepareStatement(sql);
+                                    st.executeUpdate();
+                                }
+                            }
+
+                            String migrationVersionCommand = helper.getDeleteVersionCommand();
+                            log.debug(migrationVersionCommand);
+                            st = conn.prepareStatement(migrationVersionCommand);
+                            st.setInt(1, m.getMigrationNumber());
+                            st.executeUpdate();
+
+                            log.debug("Applied migration {}", m.getClass().getSimpleName());
+                        } catch (Exception e) {
+                            conn.rollback(save);
+                            throw e;
+                        }
 
 //                for (Table t : m.getDatabase().getRemovedTables()) {
 //                    String command = helper.tableDropping(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
 //                    log.debug(command);
 //                }
-
-                    log.debug("Applied migration {}", m.getClass().getSimpleName());
+                    } else {
+                        log.debug("Skipped migration {}({}) because out of range (db version: {}, target migration: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                    }
                 }
             }
 

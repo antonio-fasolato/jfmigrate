@@ -30,12 +30,6 @@ public class ReflectionHelper {
             }
         }
 
-        Collections.sort(migrations, new Comparator<JFMigrationClass>() {
-            public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                return Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
-            }
-        });
-
         return migrations;
     }
 }

@@ -30,6 +30,17 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return sql;
     }
 
+    public String getSearchDatabaseVersionCommand() {
+        String sql = "";
+
+        sql += " select version  ";
+        sql += " from jfmigratedbversion  ";
+        sql += " where 1 = 1 ";
+        sql += " 	and version = ? ";
+
+        return sql;
+    }
+
     public String getVersionTableCreationCommand() {
         String sql = "";
 
@@ -52,6 +63,16 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
         sql += "	(?, GETDATE(), ?)";
+
+        return sql;
+    }
+
+    public String getDeleteVersionCommand() {
+        String sql = "";
+
+        sql += " delete from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += " where 1 = 1 ";
+        sql += "	and version = ? ";
 
         return sql;
     }

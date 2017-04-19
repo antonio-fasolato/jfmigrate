@@ -10,9 +10,13 @@ import net.fasolato.jfmigrate.builders.Table;
 public interface IDialectHelper {
     String getDatabaseVersionCommand();
 
+    String getSearchDatabaseVersionCommand();
+
     String getVersionTableCreationCommand();
 
     String getInsertNewVersionCommand();
+
+    String getDeleteVersionCommand();
 
     String[] getTableCreationCommand(Table t);
 
