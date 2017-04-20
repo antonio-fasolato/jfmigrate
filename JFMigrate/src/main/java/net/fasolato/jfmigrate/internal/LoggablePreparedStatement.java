@@ -1,7 +1,5 @@
 package net.fasolato.jfmigrate.internal;
 
-import org.omg.CORBA.Environment;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
