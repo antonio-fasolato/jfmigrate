@@ -46,8 +46,9 @@ public class JFMigrate {
     private int getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String currentVersionCommand = helper.getDatabaseVersionCommand();
 
-        log.info("Executing {}", currentVersionCommand);
-        PreparedStatement st = conn.prepareStatement(currentVersionCommand);
+        PreparedStatement st = new LoggablePreparedStatement(conn, currentVersionCommand);
+        log.info("Executing{}{}", System.lineSeparator(), st);
+
         ResultSet rs = st.executeQuery();
         int dbVersion = -1;
         if (rs.next()) {
@@ -59,8 +60,8 @@ public class JFMigrate {
     private void createVersionTable(IDialectHelper helper, Connection conn) throws SQLException {
         String createCommand = helper.getVersionTableCreationCommand();
 
-        log.info("Executing {}", createCommand);
-        PreparedStatement st = conn.prepareStatement(createCommand);
+        PreparedStatement st = new LoggablePreparedStatement(conn, createCommand);
+        log.info("Executing{}{}", System.lineSeparator(), st);
         st.executeUpdate();
 
     }
@@ -102,16 +103,17 @@ public class JFMigrate {
                         try {
                             for (Change c : m.migration.getChanges()) {
                                 for (String sql : c.getSqlCommand(helper)) {
-                                    log.info("Executing: {}", sql);
-                                    st = conn.prepareStatement(sql);
+                                    st = new LoggablePreparedStatement(conn, sql);
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
                                     st.executeUpdate();
                                 }
                             }
 
                             String migrationVersionCommand = helper.getInsertNewVersionCommand();
-                            st = conn.prepareStatement(migrationVersionCommand);
+                            st = new LoggablePreparedStatement(conn, migrationVersionCommand);
                             st.setInt(1, m.getMigrationNumber());
                             st.setString(2, m.getMigrationName());
+                            log.info("Executing{}{}", System.lineSeparator(), st);
                             st.executeUpdate();
 
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
@@ -180,9 +182,9 @@ public class JFMigrate {
                         PreparedStatement st;
                         try {
                             String testVersionSql = helper.getSearchDatabaseVersionCommand();
-                            st = conn.prepareStatement(testVersionSql);
+                            st = new LoggablePreparedStatement(conn, testVersionSql);
                             st.setInt(1, m.getMigrationNumber());
-                            log.debug("Executing {}", testVersionSql);
+                            log.info("Executing{}{}", System.lineSeparator(), st);
                             ResultSet rs = st.executeQuery();
                             if (!rs.next()) {
                                 throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
@@ -190,16 +192,16 @@ public class JFMigrate {
 
                             for (Change c : m.migration.getChanges()) {
                                 for (String sql : c.getSqlCommand(helper)) {
-                                    log.info("Executing: {}", sql);
-                                    st = conn.prepareStatement(sql);
+                                    st = new LoggablePreparedStatement(conn, sql);
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
                                     st.executeUpdate();
                                 }
                             }
 
                             String migrationVersionCommand = helper.getDeleteVersionCommand();
-                            log.debug(migrationVersionCommand);
-                            st = conn.prepareStatement(migrationVersionCommand);
+                            st = new LoggablePreparedStatement(conn, migrationVersionCommand);
                             st.setInt(1, m.getMigrationNumber());
+                            log.info("Executing{}{}", System.lineSeparator(), st);
                             st.executeUpdate();
 
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
