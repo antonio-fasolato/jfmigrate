@@ -4,8 +4,10 @@ import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by fasolato on 21/03/2017.
@@ -231,5 +233,33 @@ public class SqlServerDialectHelper implements IDialectHelper {
         }
 
         return toReturn.toArray(new String[toReturn.size()]);
+    }
+
+    public Map.Entry<String[], Object[]> getInsertCommand(Data d) {
+        String sql = "";
+        List<Object> values = new ArrayList<Object>();
+
+        sql += " INSERT INTO " + d.getTableName() + " (";
+        int i = 0;
+        for (String k : d.getData().keySet()) {
+            sql += k;
+            if (i < d.getData().keySet().size() - 1) {
+                sql += ", ";
+            }
+            i++;
+        }
+        sql += " ) VALUES (";
+        i = 0;
+        for (String k : d.getData().keySet()) {
+            sql += "?";
+            values.add(d.getData().get(k));
+            if (i < d.getData().keySet().size() - 1) {
+                sql += ", ";
+            }
+            i++;
+        }
+        sql += " ) ";
+
+        return new AbstractMap.SimpleEntry<String[], Object[]>(new String[]{sql}, values.toArray());
     }
 }

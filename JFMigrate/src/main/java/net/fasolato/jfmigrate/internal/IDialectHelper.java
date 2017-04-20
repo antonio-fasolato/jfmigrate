@@ -1,8 +1,11 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.Column;
+import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
+
+import java.util.Map;
 
 /**
  * Created by fasolato on 21/03/2017.
@@ -33,4 +36,6 @@ public interface IDialectHelper {
     String[] getColumnRenameCommand(Column c);
 
     String[] getAlterTableCommand(Table t);
+
+    Map.Entry<String[], Object[]> getInsertCommand(Data d);
 }

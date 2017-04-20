@@ -1,6 +1,7 @@
 package net.fasolato.jfmigrate;
 
 import net.fasolato.jfmigrate.builders.Change;
+import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.internal.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,10 +103,20 @@ public class JFMigrate {
                         PreparedStatement st;
                         try {
                             for (Change c : m.migration.getChanges()) {
-                                for (String sql : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, sql);
+                                if(Data.class.isAssignableFrom(c.getClass())) {
+                                    Data d = (Data) c;
+                                    st = new LoggablePreparedStatement(conn, d.getSqlCommand(helper)[0]);
+                                    for(int iv = 0; iv < d.getValues().length; iv++) {
+                                        st.setObject(iv + 1, d.getValues()[iv]);
+                                    }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     st.executeUpdate();
+                                } else {
+                                    for (String sql : c.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, sql);
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        st.executeUpdate();
+                                    }
                                 }
                             }
 
@@ -209,11 +220,6 @@ public class JFMigrate {
                             conn.rollback(save);
                             throw e;
                         }
-
-//                for (Table t : m.getDatabase().getRemovedTables()) {
-//                    String command = helper.tableDropping(m.getDatabase().getDatabaseName(), m.getDatabase().getSchemaName(), t);
-//                    log.debug(command);
-//                }
                     } else {
                         log.debug("Skipped migration {}({}) because out of range (db version: {}, target migration: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
                     }

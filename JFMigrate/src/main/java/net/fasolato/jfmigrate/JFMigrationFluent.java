@@ -4,6 +4,7 @@ import net.fasolato.jfmigrate.builders.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by fasolato on 04/04/2017.
@@ -81,5 +82,12 @@ public class JFMigrationFluent {
 
     public List<Change> getChanges() {
         return changes;
+    }
+
+    public Data insert(Map<String, Object> data) {
+        Data d = new Data(data);
+        d.setOperationType(OperationType.insert);
+        changes.add(d);
+        return d;
     }
 }

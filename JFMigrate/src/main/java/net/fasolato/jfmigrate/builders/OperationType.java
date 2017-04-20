@@ -7,5 +7,7 @@ public enum OperationType {
     create,
     alter,
     rename,
-    delete
+    delete,
+    insert,
+    update
 }
