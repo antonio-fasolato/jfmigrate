@@ -2,6 +2,7 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -148,30 +149,108 @@ public class H2DialectHelper implements IDialectHelper {
     }
 
     public String[] getTableDropCommand(Table t) {
-        return new String[0];
+        String sql = "";
+
+        sql += " DROP TABLE " + t.getName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getIndexDropCommand(Index i) {
-        return new String[0];
+        String sql = "";
+
+        sql += " DROP INDEX " + i.getName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getColumnDropCommand(Column c) {
-        return new String[0];
+        String sql = "";
+
+        sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getTableRenameCommand(Table t) {
-        return new String[0];
+        String sql = "";
+
+        sql += " ALTER TABLE " + t.getName() + " RENAME TO " + t.getNewName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getColumnRenameCommand(Column c) {
-        return new String[0];
+        String sql = "";
+
+        sql += " ALTER TABLE " + c.getTableName() + " ALTER COLUMN " + c.getName() + " RENAME TO " + c.getNewName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getAlterTableCommand(Table t) {
-        return new String[0];
+        List<String> toReturn = new ArrayList<String>();
+
+        for (Column c : t.getChanges()) {
+            String sql = "";
+            if (c.getOperationType() == OperationType.create) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ADD COLUMN ";
+                sql += c.getName() + " " + c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            } else if (c.getOperationType() == OperationType.alter) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ALTER COLUMN ";
+                sql += c.getName() + " " + c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            }
+            toReturn.add(sql);
+        }
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public Map.Entry<String[], Object[]> getInsertCommand(Data d) {
-        return null;
+        String sql = "";
+        List<Object> values = new ArrayList<Object>();
+
+        sql += " INSERT INTO " + d.getTableName() + " (";
+        int i = 0;
+        for (String k : d.getData().keySet()) {
+            sql += k;
+            if (i < d.getData().keySet().size() - 1) {
+                sql += ", ";
+            }
+            i++;
+        }
+        sql += " ) VALUES (";
+        i = 0;
+        for (String k : d.getData().keySet()) {
+            sql += "?";
+            values.add(d.getData().get(k));
+            if (i < d.getData().keySet().size() - 1) {
+                sql += ", ";
+            }
+            i++;
+        }
+        sql += " ) ";
+
+        return new AbstractMap.SimpleEntry<String[], Object[]>(new String[]{sql}, values.toArray());
     }
 }
