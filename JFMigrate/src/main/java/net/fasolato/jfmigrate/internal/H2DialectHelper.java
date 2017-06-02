@@ -9,11 +9,23 @@ import java.util.Map;
 
 public class H2DialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
-        return null;
+        String sql = "";
+
+        sql += " SELECT COUNT(*) AS count  ";
+        sql += " FROM information_schema.tables  ";
+        sql += " WHERE 1 = 1  ";
+        sql += "   and table_name = 'word_types' ";
+
+        return sql;
     }
 
     public String getDatabaseVersionCommand() {
-        return null;
+        String sql = "";
+
+        sql += " select ifnull(max(version), 0) ";
+        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+
+        return sql;
     }
 
     public String getSearchDatabaseVersionCommand() {
@@ -21,7 +33,15 @@ public class H2DialectHelper implements IDialectHelper {
     }
 
     public String getVersionTableCreationCommand() {
-        return null;
+        String sql = "";
+
+        sql += " create table " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ( ";
+        sql += "   version int primary key, ";
+        sql += "   appliedat timestamp not null, ";
+        sql += "   migrationname varchar(255) not null ";
+        sql += " ) ";
+
+        return sql;
     }
 
     public String getInsertNewVersionCommand() {

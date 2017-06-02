@@ -36,6 +36,8 @@ public class JFMigrate {
         switch (dialect) {
             case SQL_SERVER:
                 return new SqlServerDialectHelper();
+            case H2:
+                return new H2DialectHelper();
             default:
                 throw new NotImplementedException();
         }
