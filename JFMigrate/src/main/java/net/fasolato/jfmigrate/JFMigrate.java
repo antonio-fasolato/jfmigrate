@@ -48,12 +48,17 @@ public class JFMigrate {
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
         ResultSet rs = st.executeQuery();
+        boolean exists = true;
         if(!rs.next()) {
-            return -1;
+            exists = false;
         } else {
             if(rs.getInt(1) == 0) {
-                return -1;
+                exists = false;
             }
+        }
+        if(!exists) {
+            createVersionTable(helper,conn);
+            return -1;
         }
 
         String currentVersionCommand = helper.getDatabaseVersionCommand();
@@ -89,11 +94,6 @@ public class JFMigrate {
 
             int dbVersion = getDatabaseVersion(helper, conn);
             log.info("Current database version: {}", dbVersion);
-
-            if (dbVersion == -1) {
-                //No migration table, it must be created
-                createVersionTable(helper, conn);
-            }
 
             for (String p : packages) {
                 log.debug("Migrating up from package {}", p);
