@@ -127,7 +127,24 @@ public class H2DialectHelper implements IDialectHelper {
     }
 
     public String[] getIndexCreationCommand(Index i) {
-        return new String[0];
+        List<String> toReturn = new ArrayList<String>();
+
+        String sql = "";
+        sql += " CREATE ";
+        if (i.isUnique()) {
+            sql += " UNIQUE ";
+        }
+        sql += " INDEX " + i.getName() + " ON " + i.getTableName() + " ( ";
+        for (int j = 0; j < i.getColumns().size(); j++) {
+            sql += " " + i.getColumns().get(j);
+            if (j < i.getColumns().size() - 1) {
+                sql += ", ";
+            }
+        }
+        sql += " ) ";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public String[] getTableDropCommand(Table t) {
