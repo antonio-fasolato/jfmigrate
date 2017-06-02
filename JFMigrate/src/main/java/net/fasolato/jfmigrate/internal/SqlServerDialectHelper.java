@@ -15,19 +15,22 @@ import java.util.Map;
 public class SqlServerDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
 
-    public String getDatabaseVersionCommand() {
+    public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
-        sql += "IF (EXISTS (";
-        sql += "	SELECT * ";
+        sql += "	SELECT COUNT(*) as count ";
         sql += "    FROM INFORMATION_SCHEMA.TABLES ";
         sql += "    WHERE 1 = 1";
 //        sql += "		and TABLE_SCHEMA = 'dbo' ";
         sql += "        AND  TABLE_NAME = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'";
-        sql += "	))";
-        sql += "    select isnull(max(version), 0) as version from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
-        sql += "else";
-        sql += "	select -1 as version";
+
+        return sql;
+    }
+
+    public String getDatabaseVersionCommand() {
+        String sql = "";
+
+        sql += "select isnull(max(version), 0) as version from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
 
         return sql;
     }

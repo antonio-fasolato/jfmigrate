@@ -13,9 +13,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Created by fasolato on 20/03/2017.
- */
 public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
 
@@ -45,13 +42,25 @@ public class JFMigrate {
     }
 
     private int getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
+        String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
+        PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
+        log.info("Executing{}{}", System.lineSeparator(), st);
+        ResultSet rs = st.executeQuery();
+        if(!rs.next()) {
+            return -1;
+        } else {
+            if(rs.getInt(1) == 0) {
+                return -1;
+            }
+        }
+
         String currentVersionCommand = helper.getDatabaseVersionCommand();
 
-        PreparedStatement st = new LoggablePreparedStatement(conn, currentVersionCommand);
+        int dbVersion = -1;
+        st = new LoggablePreparedStatement(conn, currentVersionCommand);
         log.info("Executing{}{}", System.lineSeparator(), st);
 
-        ResultSet rs = st.executeQuery();
-        int dbVersion = -1;
+        rs = st.executeQuery();
         if (rs.next()) {
             dbVersion = rs.getInt(1);
         }

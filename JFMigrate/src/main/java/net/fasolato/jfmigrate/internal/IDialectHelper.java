@@ -11,6 +11,8 @@ import java.util.Map;
  * Created by fasolato on 21/03/2017.
  */
 public interface IDialectHelper {
+    String getDatabaseVersionTableExistenceCommand();
+
     String getDatabaseVersionCommand();
 
     String getSearchDatabaseVersionCommand();
