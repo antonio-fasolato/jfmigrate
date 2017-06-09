@@ -29,3 +29,11 @@ buildNumber.properties
 
 # IntelliJ
 /out/
+JFMigrate/.idea/
+JFMigrate/JFMigrate.iml
+TestPrj/
+
+.classpath
+.project
+.settings
+.vscode
