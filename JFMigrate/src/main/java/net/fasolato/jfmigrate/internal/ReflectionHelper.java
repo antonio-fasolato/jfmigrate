@@ -1,7 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFMigrationClass;
-import net.fasolato.jfmigrate.Migration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,13 +10,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/**
- * Created by fasolato on 16/03/2017.
- */
 public class ReflectionHelper {
     private static Logger log = LogManager.getLogger(ReflectionHelper.class);
 
@@ -25,8 +23,6 @@ public class ReflectionHelper {
         if (pkg == null || pkg.trim().length() == 0) {
             throw new Exception("Null or empty package passed");
         }
-//        Reflections reflections = new Reflections(pkg);
-//        Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Migration.class);
         List<String> classNames = listClassesInPackage(pkg);
 
         List<JFMigrationClass> migrations = new ArrayList<JFMigrationClass>();
@@ -43,7 +39,7 @@ public class ReflectionHelper {
         return migrations;
     }
 
-    //    https://stackoverflow.com/a/7461653
+    //  Inspiration and code taken from  https://stackoverflow.com/a/7461653
     public static List<String> listClassesInPackage(String packageName) throws IOException, URISyntaxException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         URL url;
