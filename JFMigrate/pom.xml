@@ -6,7 +6,7 @@
 
     <groupId>net.fasolato.jfmigrate</groupId>
     <artifactId>JFMigrate</artifactId>
-    <version>0.0.2-ALPHA</version>
+    <version>0.0.3-ALPHA</version>
 
     <dependencies>
         <dependency>
@@ -28,7 +28,7 @@
 
     <packaging>jar</packaging>
     <build>
-        <finalName>JFMigrate-0.0.2-ALPHA</finalName>
+        <finalName>JFMigrate-${project.version}</finalName>
     </build>
 
 </project>
