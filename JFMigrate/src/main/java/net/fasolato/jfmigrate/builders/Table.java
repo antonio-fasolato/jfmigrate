@@ -191,6 +191,27 @@ public class Table implements Change {
         return this;
     }
 
+    public Table asDecimal() {
+        return asDecimal(null, null);
+    }
+
+    public Table asDecimal(Integer precision) {
+        return asDecimal(precision, null);
+    }
+
+    public Table asDecimal(Integer precision, Integer scale) {
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+
+        Column c = changes.get(changes.size() - 1);
+        c.setType(JDBCType.DECIMAL);
+        c.setPrecision(precision);
+        c.setScale(scale);
+
+        return this;
+    }
+
     public Table as(JDBCType t) {
         return as(t, null, null);
     }
