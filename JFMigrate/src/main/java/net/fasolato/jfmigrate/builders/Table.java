@@ -160,31 +160,75 @@ public class Table implements Change {
 
     /* Type definitions */
     public Table asInteger() {
+        return asInteger(null);
+    }
+
+    public Table asInteger(Integer precision) {
         if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        changes.get(changes.size() - 1).setType(JDBCType.INTEGER);
+        Column c = changes.get(changes.size() - 1);
+        c.setType(JDBCType.INTEGER);
+        c.setPrecision(precision);
 
         return this;
     }
 
     public Table asString() {
+        return asString(null);
+    }
+
+    public Table asString(Integer precision) {
         if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        changes.get(changes.size() - 1).setType(JDBCType.VARCHAR);
+        Column c = changes.get(changes.size() - 1);
+        c.setType(JDBCType.VARCHAR);
+        c.setPrecision(precision);
+
+        return this;
+    }
+
+    public Table asDecimal() {
+        return asDecimal(null, null);
+    }
+
+    public Table asDecimal(Integer precision) {
+        return asDecimal(precision, null);
+    }
+
+    public Table asDecimal(Integer precision, Integer scale) {
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+
+        Column c = changes.get(changes.size() - 1);
+        c.setType(JDBCType.DECIMAL);
+        c.setPrecision(precision);
+        c.setScale(scale);
 
         return this;
     }
 
     public Table as(JDBCType t) {
+        return as(t, null, null);
+    }
+
+    public Table as(JDBCType t, Integer precision) {
+        return as(t, precision, null);
+    }
+
+    public Table as(JDBCType t, Integer precision, Integer scale) {
         if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
-        changes.get(changes.size() - 1).setType(t);
+        Column c = changes.get(changes.size() - 1);
+        c.setType(t);
+        c.setPrecision(precision);
+        c.setScale(scale);
 
         return this;
     }

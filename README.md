@@ -25,9 +25,33 @@ The fluent interface is freely inspired by [FluentMigrator](https://github.com/f
 - At the moment I am adding Database engines compatibility as I need it (at the moment only SqlServer and H2), in the future more will be added in a more thorough way
 - testing the code is difficult. At the moment is unit-tested on a different package not added to the repository because frankly the code is quit a mess. In the future I will be more diligent and start adding test to the main project
 
-## Build and install
+## Build
 
-(soon)
+JFMigrate uses Java 8 and Maven, so to build it you need to have installed in your machine Java JDK 1.8 and Maven (JFMigrate is built and managed with Maven version 3.3.9)
+
+JFMigrate is managed by Maven, so to generate the jar file with the library you should follow these steps:
+- Download JFMigrate from git
+```text
+git clone https://github.com/antonio-fasolato/jfmigrate.git
+```
+- Change directory into jfmigrate/JFMigrate
+```text
+cd jfmigrate\JFMigrate
+```
+- Build it
+```text
+mvn clean package
+```
+The jar file will be in the folder `target`
+
+### Branches and tags
+
+JFMigrate is developed using [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so the branches are organized like this:
+- `master`: is aligned with the latest release
+- `develop`: is the latest stable development branch (yet still not released, so experimental)
+- anything under `feature/`: a current feature being implemented
+- tags: each release corresponds to a tag
+
 
 ## Getting started
 
