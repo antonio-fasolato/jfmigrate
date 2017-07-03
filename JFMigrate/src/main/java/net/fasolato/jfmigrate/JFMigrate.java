@@ -7,11 +7,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
@@ -19,8 +18,24 @@ public class JFMigrate {
     private List<String> packages;
     private SqlDialect dialect;
 
-    public JFMigrate(SqlDialect dialect) {
-        this.dialect = dialect;
+    public JFMigrate() {
+        Properties properties = new Properties();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        InputStream stream = loader.getResourceAsStream("jfmigrate.properties");
+        try {
+            properties.load(stream);
+            String configDialect = properties.getProperty("jfmigrate.db.dialect");
+
+            dialect = SqlDialect.H2;
+            if (configDialect.equalsIgnoreCase("h2")) {
+                dialect = SqlDialect.H2;
+            } else if (configDialect.equalsIgnoreCase("sqlserver")) {
+                dialect = SqlDialect.SQL_SERVER;
+            }
+        } catch (IOException e) {
+            log.error(e);
+            throw new JFException("Error reading properties file", e);
+        }
         packages = new ArrayList<String>();
     }
 
@@ -49,15 +64,15 @@ public class JFMigrate {
         log.info("Executing{}{}", System.lineSeparator(), st);
         ResultSet rs = st.executeQuery();
         boolean exists = true;
-        if(!rs.next()) {
+        if (!rs.next()) {
             exists = false;
         } else {
-            if(rs.getInt(1) == 0) {
+            if (rs.getInt(1) == 0) {
                 exists = false;
             }
         }
-        if(!exists) {
-            createVersionTable(helper,conn);
+        if (!exists) {
+            createVersionTable(helper, conn);
             return -1;
         }
 
@@ -114,10 +129,10 @@ public class JFMigrate {
                         PreparedStatement st;
                         try {
                             for (Change c : m.migration.getChanges()) {
-                                if(Data.class.isAssignableFrom(c.getClass())) {
+                                if (Data.class.isAssignableFrom(c.getClass())) {
                                     Data d = (Data) c;
                                     st = new LoggablePreparedStatement(conn, d.getSqlCommand(helper)[0]);
-                                    for(int iv = 0; iv < d.getValues().length; iv++) {
+                                    for (int iv = 0; iv < d.getValues().length; iv++) {
                                         st.setObject(iv + 1, d.getValues()[iv]);
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
