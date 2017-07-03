@@ -4,6 +4,7 @@ import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.JDBCType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,12 @@ public class SqlServerDialectHelper implements IDialectHelper {
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " ";
+                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
