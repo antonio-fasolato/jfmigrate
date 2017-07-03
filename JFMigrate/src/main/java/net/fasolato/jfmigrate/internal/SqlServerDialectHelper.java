@@ -97,6 +97,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += c.getName() + " ";
                 if(c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
+                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
                 } else {
                     sql += c.getType() + " ";
                 }
