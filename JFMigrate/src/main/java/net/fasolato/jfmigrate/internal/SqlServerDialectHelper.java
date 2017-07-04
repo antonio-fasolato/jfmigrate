@@ -51,7 +51,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += "CREATE TABLE [dbo].[" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "](";
-        sql += "	[version] [int] NOT NULL,";
+        sql += "	[version] [bigint] NOT NULL,";
         sql += "	[appliedat] [datetime] NOT NULL,";
         sql += "	[migrationname] [nvarchar](255) NOT NULL,";
         sql += " CONSTRAINT [PK_jfmigratedbversion] PRIMARY KEY CLUSTERED ";
