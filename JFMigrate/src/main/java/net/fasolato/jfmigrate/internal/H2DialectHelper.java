@@ -43,7 +43,7 @@ public class H2DialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " create table " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ( ";
-        sql += "   version int primary key, ";
+        sql += "   version bigint primary key, ";
         sql += "   appliedat timestamp not null, ";
         sql += "   migrationname varchar(255) not null ";
         sql += " ) ";
