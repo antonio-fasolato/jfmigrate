@@ -95,9 +95,9 @@ public class SqlServerDialectHelper implements IDialectHelper {
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
-                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
-                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
                     sql += "DATETIME ";
                 } else {
                     sql += c.getType() + " ";
@@ -217,7 +217,14 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ADD ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " ";
+                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -230,7 +237,14 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " ";
+                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
