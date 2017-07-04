@@ -58,7 +58,7 @@ public class JFMigrate {
         }
     }
 
-    private int getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
+    private long getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
@@ -78,13 +78,13 @@ public class JFMigrate {
 
         String currentVersionCommand = helper.getDatabaseVersionCommand();
 
-        int dbVersion = -1;
+        long dbVersion = -1;
         st = new LoggablePreparedStatement(conn, currentVersionCommand);
         log.info("Executing{}{}", System.lineSeparator(), st);
 
         rs = st.executeQuery();
         if (rs.next()) {
-            dbVersion = rs.getInt(1);
+            dbVersion = rs.getLong(1);
         }
         return dbVersion;
     }
@@ -107,7 +107,7 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            int dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = getDatabaseVersion(helper, conn);
             log.info("Current database version: {}", dbVersion);
 
             for (String p : packages) {
@@ -192,7 +192,7 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            int dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = getDatabaseVersion(helper, conn);
             log.info("Current database version: {}", dbVersion);
 
             if (dbVersion <= 0) {
