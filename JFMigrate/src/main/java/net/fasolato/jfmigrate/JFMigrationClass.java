@@ -16,7 +16,7 @@ public abstract class JFMigrationClass {
 
     public abstract void down();
 
-    public int getMigrationNumber() {
+    public long getMigrationNumber() {
         Annotation[] annotations = this.getClass().getAnnotations();
         for (Annotation a : annotations) {
             if (Migration.class.isAssignableFrom(a.annotationType())) {

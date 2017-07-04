@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Migration {
-    int number() default -1;
+    long number() default -1;
     String description() default "";
 }
