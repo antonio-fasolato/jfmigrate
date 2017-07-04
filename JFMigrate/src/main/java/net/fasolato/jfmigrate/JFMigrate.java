@@ -116,7 +116,7 @@ public class JFMigrate {
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
                 Collections.sort(migrations, new Comparator<JFMigrationClass>() {
                     public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                        return Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
+                        return Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
                     }
                 });
 
@@ -148,7 +148,7 @@ public class JFMigrate {
 
                             String migrationVersionCommand = helper.getInsertNewVersionCommand();
                             st = new LoggablePreparedStatement(conn, migrationVersionCommand);
-                            st.setInt(1, m.getMigrationNumber());
+                            st.setLong(1, m.getMigrationNumber());
                             st.setString(2, m.getMigrationName());
                             log.info("Executing{}{}", System.lineSeparator(), st);
                             st.executeUpdate();
@@ -206,7 +206,7 @@ public class JFMigrate {
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
                 Collections.sort(migrations, new Comparator<JFMigrationClass>() {
                     public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                        return -1 * Integer.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
+                        return -1 * Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
                     }
                 });
 
@@ -220,7 +220,7 @@ public class JFMigrate {
                         try {
                             String testVersionSql = helper.getSearchDatabaseVersionCommand();
                             st = new LoggablePreparedStatement(conn, testVersionSql);
-                            st.setInt(1, m.getMigrationNumber());
+                            st.setLong(1, m.getMigrationNumber());
                             log.info("Executing{}{}", System.lineSeparator(), st);
                             ResultSet rs = st.executeQuery();
                             if (!rs.next()) {
@@ -237,7 +237,7 @@ public class JFMigrate {
 
                             String migrationVersionCommand = helper.getDeleteVersionCommand();
                             st = new LoggablePreparedStatement(conn, migrationVersionCommand);
-                            st.setInt(1, m.getMigrationNumber());
+                            st.setLong(1, m.getMigrationNumber());
                             log.info("Executing{}{}", System.lineSeparator(), st);
                             st.executeUpdate();
 
