@@ -27,7 +27,7 @@ public class ReflectionHelper {
 
         List<JFMigrationClass> migrations = new ArrayList<JFMigrationClass>();
         for (String n : classNames) {
-            Class<?> c = Class.forName(pkg + "." + n);
+            Class<?> c = Class.forName((pkg + "." + n).replaceAll("/", ""));
             if (!JFMigrationClass.class.isAssignableFrom(c)) {
                 log.debug("class {} does not implement IMigration. Class is ignored", c.getSimpleName());
             } else {
