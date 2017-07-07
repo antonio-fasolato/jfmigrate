@@ -31,6 +31,8 @@ public class JFMigrate {
                 dialect = SqlDialect.H2;
             } else if (configDialect.equalsIgnoreCase("sqlserver")) {
                 dialect = SqlDialect.SQL_SERVER;
+            } else if (configDialect.equalsIgnoreCase("pgsql")) {
+                dialect = SqlDialect.PGSQL;
             }
         } catch (IOException e) {
             log.error(e);
@@ -53,6 +55,8 @@ public class JFMigrate {
                 return new SqlServerDialectHelper();
             case H2:
                 return new H2DialectHelper();
+            case PGSQL:
+                return new PGSqlDialectHelper();
             default:
                 throw new NotImplementedException();
         }

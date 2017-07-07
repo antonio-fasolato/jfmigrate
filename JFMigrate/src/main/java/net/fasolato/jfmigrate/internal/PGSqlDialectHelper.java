@@ -7,14 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class H2DialectHelper implements IDialectHelper {
+public class PGSqlDialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
-        sql += " SELECT COUNT(*) AS count  ";
-        sql += " FROM information_schema.tables  ";
-        sql += " WHERE 1 = 1  ";
-        sql += "   and table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME.toUpperCase() + "' ";
+        sql += " SELECT count(*) as count from (  ";
+        sql += "  SELECT 1  ";
+        sql += "  FROM   pg_catalog.pg_class c  ";
+        sql += "  JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace  ";
+        sql += "  WHERE  1 = 1  ";
+//        sql += "   AND n.nspname = 'schema_name'  ";
+        sql += "   AND    c.relname = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'  ";
+        sql += " ) a  ";
 
         return sql;
     }
@@ -22,8 +26,8 @@ public class H2DialectHelper implements IDialectHelper {
     public String getDatabaseVersionCommand() {
         String sql = "";
 
-        sql += " select ifnull(max(version), 0) ";
-        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " select coalesce(max(version), 0) as version  ";
+        sql += " from jfmigratedbversion  ";
 
         return sql;
     }
@@ -32,7 +36,7 @@ public class H2DialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " select version  ";
-        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " from" + JFMigrationConstants.DB_VERSION_TABLE_NAME;
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
 
@@ -42,11 +46,11 @@ public class H2DialectHelper implements IDialectHelper {
     public String getVersionTableCreationCommand() {
         String sql = "";
 
-        sql += " create table " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ( ";
-        sql += "   version bigint primary key, ";
-        sql += "   appliedat timestamp not null, ";
-        sql += "   migrationname varchar(255) not null ";
-        sql += " ) ";
+        sql += " create table jfmigratedbversion (  ";
+        sql += "   version bigint primary key,  ";
+        sql += "   appliedat timestamp not null,  ";
+        sql += "   migrationname varchar(255) not null  ";
+        sql += " )  ";
 
         return sql;
     }
@@ -57,7 +61,7 @@ public class H2DialectHelper implements IDialectHelper {
         sql += "insert into " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
-        sql += "	(?, CURRENT_TIMESTAMP(), ?)";
+        sql += "	(?, current_timestamp, ?)";
 
         return sql;
     }
@@ -183,7 +187,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String[] getColumnRenameCommand(Column c) {
         String sql = "";
 
-        sql += " ALTER TABLE " + c.getTableName() + " ALTER COLUMN " + c.getName() + " RENAME TO " + c.getNewName() + " ;";
+        sql += " ALTER TABLE " + c.getTableName() + " RENAME COLUMN " + c.getName() + " TO " + c.getNewName() + " ;";
 
         return new String[]{sql};
     }
@@ -210,7 +214,7 @@ public class H2DialectHelper implements IDialectHelper {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " TYPE " + c.getType() + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
