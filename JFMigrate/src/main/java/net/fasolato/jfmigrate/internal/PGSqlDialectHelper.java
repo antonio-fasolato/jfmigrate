@@ -35,8 +35,8 @@ public class PGSqlDialectHelper implements IDialectHelper {
     public String getSearchDatabaseVersionCommand() {
         String sql = "";
 
-        sql += " select version  ";
-        sql += " from" + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " select version ";
+        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
 
