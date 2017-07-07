@@ -5,5 +5,6 @@ package net.fasolato.jfmigrate;
  */
 public enum SqlDialect {
     SQL_SERVER,
-    H2
+    H2,
+    PGSQL
 }
