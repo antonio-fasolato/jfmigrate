@@ -115,7 +115,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
                     sql += ", ";
                 }
             }
-            sql += ") ";
+            sql += " ) ";
             sql += "    REFERENCES " + k.getToTable() + " ( ";
             for (i = 0; i < k.getPrimaryKeys().size(); i++) {
                 String c = k.getPrimaryKeys().get(i);
@@ -124,7 +124,15 @@ public class PGSqlDialectHelper implements IDialectHelper {
                     sql += ", ";
                 }
             }
-            sql += ") ";
+            sql += " ) ";
+
+            if(k.isOnDeleteCascade()) {
+                sql += " ON DELETE CASCADE ";
+            }
+            if(k.isOnUpdateCascade()) {
+                sql += " ON UPDATE CASCADE ";
+            }
+
             toReturn.add(sql);
         }
 

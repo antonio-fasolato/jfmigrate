@@ -15,6 +15,8 @@ public class ForeignKey implements Change {
     private List<String> foreignColumns;
     private String toTable;
     private List<String> primaryKeys;
+    private boolean onDeleteCascade;
+    private boolean onUpdateCascade;
 
     public ForeignKey(String name) {
         this.name = name;
@@ -64,5 +66,21 @@ public class ForeignKey implements Change {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isOnDeleteCascade() {
+        return onDeleteCascade;
+    }
+
+    public void setOnDeleteCascade(boolean onDeleteCascade) {
+        this.onDeleteCascade = onDeleteCascade;
+    }
+
+    public boolean isOnUpdateCascade() {
+        return onUpdateCascade;
+    }
+
+    public void setOnUpdateCascade(boolean onUpdateCascade) {
+        this.onUpdateCascade = onUpdateCascade;
     }
 }

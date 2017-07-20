@@ -110,6 +110,24 @@ public class Table implements Change {
         addedForeignKeys.get(addedForeignKeys.size() - 1).getPrimaryKeys().add(columnName);
         return this;
     }
+
+    public Table onDeleteCascade() {
+        if (addedForeignKeys.isEmpty()) {
+            throw new JFException("No foreign key defined");
+        }
+
+        addedForeignKeys.get(addedForeignKeys.size() - 1).setOnDeleteCascade(true);
+        return this;
+    }
+
+    public Table onUpdateCascade() {
+        if (addedForeignKeys.isEmpty()) {
+            throw new JFException("No foreign key defined");
+        }
+
+        addedForeignKeys.get(addedForeignKeys.size() - 1).setOnUpdateCascade(true);
+        return this;
+    }
     /* Foreign key */
 
     /* Columns */
