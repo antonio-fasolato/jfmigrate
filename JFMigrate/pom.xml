@@ -6,7 +6,7 @@
 
     <groupId>net.fasolato.jfmigrate</groupId>
     <artifactId>JFMigrate</artifactId>
-    <version>0.0.14-ALPHA</version>
+    <version>0.0.15-ALPHA</version>
 
     <dependencies>
         <dependency>
