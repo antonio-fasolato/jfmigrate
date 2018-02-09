@@ -16,6 +16,7 @@ public class Data implements Change {
     private String tableName;
     private boolean allRows;
     private Map where;
+    private List<Map<String, Object>> deleteWhere;
 
     public Data() {
     }
@@ -86,5 +87,13 @@ public class Data implements Change {
 
     public void setWhere(Map where) {
         this.where = where;
+    }
+
+    public List<Map<String, Object>> getDeleteWhere() {
+        return deleteWhere;
+    }
+
+    public void setDeleteWhere(List<Map<String, Object>> deleteWhere) {
+        this.deleteWhere = deleteWhere;
     }
 }

@@ -140,10 +140,10 @@ public class SqlServerDialectHelper implements IDialectHelper {
             }
             sql += " ) ";
 
-            if(k.isOnDeleteCascade()) {
+            if (k.isOnDeleteCascade()) {
                 sql += " ON DELETE CASCADE ";
             }
-            if(k.isOnUpdateCascade()) {
+            if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
 
@@ -226,9 +226,9 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += t.getName();
                 sql += " ADD ";
                 sql += c.getName() + " ";
-                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
-                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
                     sql += "DATETIME ";
                 } else {
                     sql += c.getType() + " ";
@@ -246,9 +246,9 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
                 sql += c.getName() + " ";
-                if(c.getType().equals(JDBCType.BOOLEAN)) {
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
-                } else if(c.getType().equals(JDBCType.TIMESTAMP)) {
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
                     sql += "DATETIME ";
                 } else {
                     sql += c.getType() + " ";
@@ -271,7 +271,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        for(Map<String, Object> m:d.getData()) {
+        for (Map<String, Object> m : d.getData()) {
             String sql = "";
             List<Object> values = new ArrayList<Object>();
 
@@ -303,16 +303,21 @@ public class SqlServerDialectHelper implements IDialectHelper {
     }
 
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-//        String sql = "";
-//        List<Object> values = new ArrayList<Object>();
-//
-//        sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
-//        for(String k : d.getData().keySet()) {
-//            sql += " AND " + k + " = ? ";
-//            values.add(d.getData().get(k));
-//        }
-//
-//        return new AbstractMap.SimpleEntry<String[], Object[]>(new String[]{sql}, values.toArray());
-        return null;
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
+        for (Map<String, Object> w : d.getDeleteWhere()) {
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
+
+            sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
+            for (String k : w.keySet()) {
+                sql += " AND " + k + " = ? ";
+                values.add(w.get(k));
+            }
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
     }
 }
