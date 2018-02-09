@@ -2,9 +2,11 @@ package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
+import net.fasolato.jfmigrate.internal.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -251,19 +253,33 @@ public class Table implements Change {
         return this;
     }
 
-    public String[] getSqlCommand(IDialectHelper helper) {
+    public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
         switch (operationType) {
             case create:
-                return helper.getTableCreationCommand(this);
+                for (String s : helper.getTableCreationCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case delete:
-                return helper.getTableDropCommand(this);
+                for (String s : helper.getTableDropCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case rename:
-                return helper.getTableRenameCommand(this);
+                for (String s : helper.getTableRenameCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case alter:
-                return helper.getAlterTableCommand(this);
-            default:
-                return new String[]{};
+                for (String s : helper.getAlterTableCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
         }
+
+        return toReturn;
     }
 
     /* Type definitions */

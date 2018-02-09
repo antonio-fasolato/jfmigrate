@@ -238,31 +238,41 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public Map.Entry<String[], Object[]> getInsertCommand(Data d) {
-        String sql = "";
-        List<Object> values = new ArrayList<Object>();
+    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        sql += " INSERT INTO " + d.getTableName() + " (";
-        int i = 0;
-        for (String k : d.getData().keySet()) {
-            sql += k;
-            if (i < d.getData().keySet().size() - 1) {
-                sql += ", ";
-            }
-            i++;
-        }
-        sql += " ) VALUES (";
-        i = 0;
-        for (String k : d.getData().keySet()) {
-            sql += "?";
-            values.add(d.getData().get(k));
-            if (i < d.getData().keySet().size() - 1) {
-                sql += ", ";
-            }
-            i++;
-        }
-        sql += " ) ";
+        for(Map<String, Object> m:d.getData()) {
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
 
-        return new AbstractMap.SimpleEntry<String[], Object[]>(new String[]{sql}, values.toArray());
+            sql += " INSERT INTO " + d.getTableName() + " (";
+            int i = 0;
+            for (String k : m.keySet()) {
+                sql += k;
+                if (i < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                i++;
+            }
+            sql += " ) VALUES (";
+            i = 0;
+            for (String k : m.keySet()) {
+                sql += "?";
+                values.add(m.get(k));
+                if (i < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                i++;
+            }
+            sql += " ) ";
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
+    }
+
+    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
+        throw new UnsupportedOperationException();
     }
 }

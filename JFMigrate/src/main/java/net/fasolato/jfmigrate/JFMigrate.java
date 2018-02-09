@@ -135,15 +135,18 @@ public class JFMigrate {
                             for (Change c : m.migration.getChanges()) {
                                 if (Data.class.isAssignableFrom(c.getClass())) {
                                     Data d = (Data) c;
-                                    st = new LoggablePreparedStatement(conn, d.getSqlCommand(helper)[0]);
-                                    for (int iv = 0; iv < d.getValues().length; iv++) {
-                                        st.setObject(iv + 1, d.getValues()[iv]);
+
+                                    for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        for (int iv = 0; iv < commands.getB().length; iv++) {
+                                            st.setObject(iv + 1, commands.getB()[iv]);
+                                        }
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        st.executeUpdate();
                                     }
-                                    log.info("Executing{}{}", System.lineSeparator(), st);
-                                    st.executeUpdate();
                                 } else {
-                                    for (String sql : c.getSqlCommand(helper)) {
-                                        st = new LoggablePreparedStatement(conn, sql);
+                                    for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         st.executeUpdate();
                                     }
@@ -232,8 +235,8 @@ public class JFMigrate {
                             }
 
                             for (Change c : m.migration.getChanges()) {
-                                for (String sql : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, sql);
+                                for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                    st = new LoggablePreparedStatement(conn, commands.getA());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     st.executeUpdate();
                                 }
