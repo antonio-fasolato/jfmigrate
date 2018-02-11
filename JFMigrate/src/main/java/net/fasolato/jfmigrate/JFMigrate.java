@@ -236,9 +236,18 @@ public class JFMigrate {
 
                             for (Change c : m.migration.getChanges()) {
                                 for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, commands.getA());
-                                    log.info("Executing{}{}", System.lineSeparator(), st);
-                                    st.executeUpdate();
+                                    if (Data.class.isAssignableFrom(c.getClass())) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        for (int i = 0; i < commands.getB().length; i++) {
+                                            st.setObject(i + 1, commands.getB()[i]);
+                                        }
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        st.executeUpdate();
+                                    } else {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        st.executeUpdate();
+                                    }
                                 }
                             }
 
