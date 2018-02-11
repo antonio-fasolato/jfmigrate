@@ -269,6 +269,21 @@ public class H2DialectHelper implements IDialectHelper {
     }
 
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        throw new UnsupportedOperationException();
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
+        for (Map<String, Object> w : d.getDeleteWhere()) {
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
+
+            sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
+            for (String k : w.keySet()) {
+                sql += " AND " + k + " = ? ";
+                values.add(w.get(k));
+            }
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
     }
 }
