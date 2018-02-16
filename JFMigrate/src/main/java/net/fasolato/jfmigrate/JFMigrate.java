@@ -9,6 +9,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.sql.*;
 import java.util.*;
 
@@ -103,10 +105,14 @@ public class JFMigrate {
     }
 
     public void migrateUp() throws Exception {
-        migrateUp(-1);
+        migrateUp(-1, null);
     }
 
-    public void migrateUp(int startMigrationNumber) throws Exception {
+    public void migrateUp(Writer out) throws Exception {
+        migrateUp(-1, out);
+    }
+
+    public void migrateUp(int startMigrationNumber, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -115,7 +121,10 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            long dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = 0;
+            if (out == null) {
+                getDatabaseVersion(helper, conn);
+            }
             log.info("Current database version: {}", dbVersion);
 
             for (String p : packages) {
@@ -133,7 +142,14 @@ public class JFMigrate {
                         log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
-                        Savepoint save = conn.setSavepoint();
+                        Savepoint save = null;
+                        if (out == null) {
+                            save = conn.setSavepoint();
+                        } else {
+                            out.write(String.format("-- Migration %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
                         PreparedStatement st;
                         try {
                             for (Change c : m.migration.getChanges()) {
@@ -146,13 +162,25 @@ public class JFMigrate {
                                             st.setObject(iv + 1, commands.getB()[iv]);
                                         }
                                         log.info("Executing{}{}", System.lineSeparator(), st);
-                                        st.executeUpdate();
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
                                     }
                                 } else {
                                     for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
                                         st = new LoggablePreparedStatement(conn, commands.getA());
                                         log.info("Executing{}{}", System.lineSeparator(), st);
-                                        st.executeUpdate();
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
                                     }
                                 }
                             }
@@ -162,11 +190,25 @@ public class JFMigrate {
                             st.setLong(1, m.getMigrationNumber());
                             st.setString(2, m.getMigrationName());
                             log.info("Executing{}{}", System.lineSeparator(), st);
-                            st.executeUpdate();
+                            if (out == null) {
+                                st.executeUpdate();
+                            } else {
+                                out.write(st.toString().trim());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
 
+                            if (out != null) {
+                                out.write("--------------------------------------------");
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
-                            conn.rollback(save);
+                            if (conn != null && save != null) {
+                                conn.rollback(save);
+                            }
                             throw e;
                         }
                     } else {
@@ -179,7 +221,9 @@ public class JFMigrate {
                 }
             }
 
-            conn.commit();
+            if(conn != null) {
+                conn.commit();
+            }
         } catch (Exception e) {
             if (conn != null) {
                 conn.rollback();
@@ -199,6 +243,10 @@ public class JFMigrate {
     }
 
     public void migrateDown(int targetMigration) throws Exception {
+        migrateDown(targetMigration, null);
+    }
+
+    public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
