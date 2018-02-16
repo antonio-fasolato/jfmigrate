@@ -304,17 +304,22 @@ public class SqlServerDialectHelper implements IDialectHelper {
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        for (Map<String, Object> w : d.getWhere()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
+        if (!d.isAllRows()) {
+            for (Map<String, Object> w : d.getWhere()) {
+                String sql = "";
+                List<Object> values = new ArrayList<Object>();
 
-            sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
-            for (String k : w.keySet()) {
-                sql += " AND " + k + " = ? ";
-                values.add(w.get(k));
+                sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
+                for (String k : w.keySet()) {
+                    sql += " AND " + k + " = ? ";
+                    values.add(w.get(k));
+                }
+
+                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
             }
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        } else {
+            String sql = " DELETE " + d.getTableName();
+            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
 
         return toReturn;
@@ -339,11 +344,13 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 }
                 j++;
             }
-            sql += " WHERE 1 = 1 ";
-            for (Map<String, Object> w : d.getWhere()) {
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
+            if (!d.isAllRows()) {
+                sql += " WHERE 1 = 1 ";
+                for (Map<String, Object> w : d.getWhere()) {
+                    for (String k : w.keySet()) {
+                        sql += " AND " + k + " = ? ";
+                        values.add(w.get(k));
+                    }
                 }
             }
 
