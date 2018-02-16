@@ -103,6 +103,10 @@ public class JFMigrate {
     }
 
     public void migrateUp() throws Exception {
+        migrateUp(-1);
+    }
+
+    public void migrateUp(int startMigrationNumber) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -125,7 +129,7 @@ public class JFMigrate {
                 });
 
                 for (JFMigrationClass m : migrations) {
-                    if (m.getMigrationNumber() > dbVersion) {
+                    if (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber)) {
                         log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
@@ -166,7 +170,11 @@ public class JFMigrate {
                             throw e;
                         }
                     } else {
-                        log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
+                        if (m.getMigrationNumber() <= dbVersion) {
+                            log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
+                        } else {
+                            log.info("Skipping migration {} because lower than selected start migration number ({})", m.getMigrationNumber(), startMigrationNumber);
+                        }
                     }
                 }
             }
