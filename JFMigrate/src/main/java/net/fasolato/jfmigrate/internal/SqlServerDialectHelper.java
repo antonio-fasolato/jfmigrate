@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.JDBCType;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -313,6 +312,39 @@ public class SqlServerDialectHelper implements IDialectHelper {
             for (String k : w.keySet()) {
                 sql += " AND " + k + " = ? ";
                 values.add(w.get(k));
+            }
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
+    }
+
+    public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
+        for (int i = 0; i < d.getData().size(); i++) {
+            Map<String, Object> m = d.getData().get(i);
+
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
+
+            sql += " UPDATE " + d.getTableName() + " SET ";
+            int j = 0;
+            for (String k : m.keySet()) {
+                sql += k + " = ? ";
+                values.add(m.get(k));
+                if (j < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                j++;
+            }
+            sql += " WHERE 1 = 1 ";
+            for (Map<String, Object> w : d.getDeleteWhere()) {
+                for (String k : w.keySet()) {
+                    sql += " AND " + k + " = ? ";
+                    values.add(w.get(k));
+                }
             }
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));

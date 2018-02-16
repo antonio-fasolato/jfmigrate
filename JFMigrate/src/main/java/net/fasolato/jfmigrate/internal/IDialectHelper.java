@@ -43,4 +43,6 @@ public interface IDialectHelper {
     List<Pair<String, Object[]>> getInsertCommand(Data d);
 
     List<Pair<String, Object[]>> getDeleteCommand(Data d);
+
+    List<Pair<String, Object[]>> getUpdateCommand(Data d);
 }

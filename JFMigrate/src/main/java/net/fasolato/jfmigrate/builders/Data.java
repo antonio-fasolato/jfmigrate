@@ -31,6 +31,11 @@ public class Data implements Change {
         return this;
     }
 
+    public Data table(String tableName) {
+        this.tableName = tableName;
+        return this;
+    }
+
     public Data data(List<Map<String, Object>> data) {
         this.data = data;
         return this;
@@ -52,6 +57,8 @@ public class Data implements Change {
                 return helper.getInsertCommand(this);
             case delete:
                 return helper.getDeleteCommand(this);
+            case update:
+                return helper.getUpdateCommand(this);
             default:
                 return new ArrayList<Pair<String, Object[]>>();
         }
