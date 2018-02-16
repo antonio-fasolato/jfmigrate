@@ -334,7 +334,11 @@ public class JFMigrate {
                             throw e;
                         }
                     } else {
-                        log.debug("Skipped migration {}({}) because out of range (db version: {}, target migration: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                        if (m.getMigrationNumber() > dbVersion) {
+                            log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                        } else {
+                            log.debug("Skipped migration {}({}) because out of range (target version: {})", m.getMigrationName(), m.getMigrationNumber(), targetMigration);
+                        }
                     }
                 }
             }
