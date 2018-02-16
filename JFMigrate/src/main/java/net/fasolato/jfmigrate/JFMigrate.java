@@ -241,10 +241,14 @@ public class JFMigrate {
             }
         } catch (Exception e) {
             if (conn != null) {
-                conn.rollback();
-                log.error("Connection rolled back");
+                try {
+                    conn.rollback();
+                    log.error("Connection rolled back");
+                } catch (Exception ex) {
+                    log.error("Error while rolling back transaction", ex);
+                }
             }
-            log.error(e);
+            log.error("Error executing query", e);
             throw e;
         } finally {
             try {
@@ -366,7 +370,7 @@ public class JFMigrate {
 
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
-                            if(out == null) {
+                            if (out == null) {
                                 conn.rollback(save);
                             }
                             throw e;
@@ -381,15 +385,19 @@ public class JFMigrate {
                 }
             }
 
-            if(out == null) {
+            if (out == null) {
                 conn.commit();
             }
         } catch (Exception e) {
             if (conn != null) {
-                conn.rollback();
-                log.error("Connection rolled back");
+                try {
+                    conn.rollback();
+                    log.error("Connection rolled back");
+                } catch (Exception ex) {
+                    log.error("Error rolling back connection", ex);
+                }
             }
-            log.error(e);
+            log.error("Error executing query", e);
             throw e;
         } finally {
             try {
