@@ -92,18 +92,16 @@ public class JFMigrationFluent {
         return d;
     }
 
-    public Data delete(List<Map<String, Object>> where) {
+    public Data delete() {
         Data d = new Data();
-        d.setDeleteWhere(where);
         d.setOperationType(OperationType.delete);
         changes.add(d);
         return d;
     }
 
-    public Data update(List<Map<String, Object>> data, List<Map<String, Object>> where) {
+    public Data update(List<Map<String, Object>> data) {
         Data d = new Data();
         d.data(data);
-        d.setDeleteWhere(where);
         d.setOperationType(OperationType.update);
         changes.add(d);
         return d;

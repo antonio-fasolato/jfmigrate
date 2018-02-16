@@ -15,8 +15,7 @@ public class Data implements Change {
     private List<Map<String, Object>> data;
     private String tableName;
     private boolean allRows;
-    private Map where;
-    private List<Map<String, Object>> deleteWhere;
+    private List<Map<String, Object>> where;
 
     public Data() {
     }
@@ -41,13 +40,13 @@ public class Data implements Change {
         return this;
     }
 
-    public Data allRows() {
-        allRows = true;
+    public Data where(List<Map<String, Object>> where) {
+        this.setWhere(where);
         return this;
     }
 
-    public Data where(Map where) {
-        this.where = where;
+    public Data allRows() {
+        allRows = true;
         return this;
     }
 
@@ -88,19 +87,11 @@ public class Data implements Change {
         this.allRows = allRows;
     }
 
-    public Map getWhere() {
+    public List<Map<String, Object>> getWhere() {
         return where;
     }
 
-    public void setWhere(Map where) {
+    public void setWhere(List<Map<String, Object>> where) {
         this.where = where;
-    }
-
-    public List<Map<String, Object>> getDeleteWhere() {
-        return deleteWhere;
-    }
-
-    public void setDeleteWhere(List<Map<String, Object>> deleteWhere) {
-        this.deleteWhere = deleteWhere;
     }
 }

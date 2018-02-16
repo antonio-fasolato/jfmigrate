@@ -2,7 +2,6 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -275,7 +274,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        for (Map<String, Object> w : d.getDeleteWhere()) {
+        for (Map<String, Object> w : d.getWhere()) {
             String sql = "";
             List<Object> values = new ArrayList<Object>();
 
@@ -311,7 +310,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 j++;
             }
             sql += " WHERE 1 = 1 ";
-            for (Map<String, Object> w : d.getDeleteWhere()) {
+            for (Map<String, Object> w : d.getWhere()) {
                 for (String k : w.keySet()) {
                     sql += " AND " + k + " = ? ";
                     values.add(w.get(k));
