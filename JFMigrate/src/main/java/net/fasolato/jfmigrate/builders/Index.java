@@ -1,8 +1,10 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
+import net.fasolato.jfmigrate.internal.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,15 +38,23 @@ public class Index implements Change {
         return this;
     }
 
-    public String[] getSqlCommand(IDialectHelper helper) {
+    public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
         switch (operationType) {
             case create:
-                return helper.getIndexCreationCommand(this);
+                for (String s : helper.getIndexCreationCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case delete:
-                return helper.getIndexDropCommand(this);
-            default:
-                return new String[]{};
+                for (String s : helper.getIndexDropCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
         }
+
+        return toReturn;
     }
 
     public String getTableName() {

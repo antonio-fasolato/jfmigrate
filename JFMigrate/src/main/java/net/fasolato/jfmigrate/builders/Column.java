@@ -1,9 +1,13 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
+import net.fasolato.jfmigrate.internal.Pair;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.sql.JDBCType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by fasolato on 20/03/2017.
@@ -27,15 +31,22 @@ public class Column implements Change {
         this.operationType = operationType;
     }
 
-    public String[] getSqlCommand(IDialectHelper helper) {
+    public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
         switch (operationType) {
             case delete:
-                return helper.getColumnDropCommand(this);
+                for (String s : helper.getColumnDropCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case rename:
-                return helper.getColumnRenameCommand(this);
-            default:
-                return new String[]{};
+                for (String s : helper.getColumnRenameCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
         }
+
+        return toReturn;
     }
 
     public String getName() {

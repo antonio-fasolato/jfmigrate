@@ -1,7 +1,10 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
+import net.fasolato.jfmigrate.internal.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,14 +12,12 @@ import java.util.Map;
  */
 public class Data implements Change {
     private OperationType operationType;
-    private Map<String, Object> data;
+    private List<Map<String, Object>> data;
     private String tableName;
     private boolean allRows;
-    private Map where;
-    private Object[] values;
+    private List<Map<String, Object>> where;
 
-    public Data(Map data) {
-        this.data = data;
+    public Data() {
     }
 
     public Data intoTable(String tableName) {
@@ -29,14 +30,36 @@ public class Data implements Change {
         return this;
     }
 
-    public String[] getSqlCommand(IDialectHelper helper) {
+    public Data table(String tableName) {
+        this.tableName = tableName;
+        return this;
+    }
+
+    public Data data(List<Map<String, Object>> data) {
+        this.data = data;
+        return this;
+    }
+
+    public Data where(List<Map<String, Object>> where) {
+        this.setWhere(where);
+        return this;
+    }
+
+    public Data allRows() {
+        allRows = true;
+        return this;
+    }
+
+    public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         switch (operationType) {
             case insert:
-                Map.Entry<String[], Object[]> toReturn = helper.getInsertCommand(this);
-                values = toReturn.getValue();
-                return toReturn.getKey();
+                return helper.getInsertCommand(this);
+            case delete:
+                return helper.getDeleteCommand(this);
+            case update:
+                return helper.getUpdateCommand(this);
             default:
-                return new String[0];
+                return new ArrayList<Pair<String, Object[]>>();
         }
     }
 
@@ -52,6 +75,10 @@ public class Data implements Change {
         return tableName;
     }
 
+    public List<Map<String, Object>> getData() {
+        return data;
+    }
+
     public boolean isAllRows() {
         return allRows;
     }
@@ -60,19 +87,11 @@ public class Data implements Change {
         this.allRows = allRows;
     }
 
-    public Map getWhere() {
+    public List<Map<String, Object>> getWhere() {
         return where;
     }
 
-    public void setWhere(Map where) {
+    public void setWhere(List<Map<String, Object>> where) {
         this.where = where;
-    }
-
-    public Map<String, Object> getData() {
-        return data;
-    }
-
-    public Object[] getValues() {
-        return values;
     }
 }

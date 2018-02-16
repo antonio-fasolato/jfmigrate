@@ -84,9 +84,25 @@ public class JFMigrationFluent {
         return changes;
     }
 
-    public Data insert(Map<String, Object> data) {
-        Data d = new Data(data);
+    public Data insert(List<Map<String, Object>> data) {
+        Data d = new Data();
+        d.data(data);
         d.setOperationType(OperationType.insert);
+        changes.add(d);
+        return d;
+    }
+
+    public Data delete() {
+        Data d = new Data();
+        d.setOperationType(OperationType.delete);
+        changes.add(d);
+        return d;
+    }
+
+    public Data update(List<Map<String, Object>> data) {
+        Data d = new Data();
+        d.data(data);
+        d.setOperationType(OperationType.update);
         changes.add(d);
         return d;
     }

@@ -5,6 +5,7 @@ import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,5 +40,9 @@ public interface IDialectHelper {
 
     String[] getAlterTableCommand(Table t);
 
-    Map.Entry<String[], Object[]> getInsertCommand(Data d);
+    List<Pair<String, Object[]>> getInsertCommand(Data d);
+
+    List<Pair<String, Object[]>> getDeleteCommand(Data d);
+
+    List<Pair<String, Object[]>> getUpdateCommand(Data d);
 }
