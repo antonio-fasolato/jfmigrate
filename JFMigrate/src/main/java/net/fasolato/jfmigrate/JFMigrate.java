@@ -105,14 +105,18 @@ public class JFMigrate {
     }
 
     public void migrateUp() throws Exception {
-        migrateUp(-1, null);
+        migrateUp(-1, null, false);
     }
 
     public void migrateUp(Writer out) throws Exception {
-        migrateUp(-1, out);
+        migrateUp(-1, out, false);
     }
 
-    public void migrateUp(int startMigrationNumber, Writer out) throws Exception {
+    public void migrateUp(Writer out, boolean createVersionInfoTable) throws Exception {
+        migrateUp(-1, out, createVersionInfoTable);
+    }
+
+    public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -124,6 +128,17 @@ public class JFMigrate {
             long dbVersion = 0;
             if (out == null) {
                 getDatabaseVersion(helper, conn);
+            } else if (createVersionInfoTable) {
+                out.write("-- Version table");
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write(helper.getVersionTableCreationCommand());
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write("--------------------------------------------");
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
             }
             log.info("Current database version: {}", dbVersion);
 
@@ -221,7 +236,7 @@ public class JFMigrate {
                 }
             }
 
-            if(conn != null) {
+            if (conn != null) {
                 conn.commit();
             }
         } catch (Exception e) {
