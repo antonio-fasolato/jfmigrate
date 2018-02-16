@@ -74,6 +74,14 @@ public class H2DialectHelper implements IDialectHelper {
         return sql;
     }
 
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        return new String[0];
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        return new String[0];
+    }
+
     public String[] getTableCreationCommand(Table t) {
         List<String> toReturn = new ArrayList<String>();
         String sql = "";

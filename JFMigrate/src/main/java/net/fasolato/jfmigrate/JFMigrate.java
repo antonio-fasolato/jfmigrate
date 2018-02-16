@@ -158,12 +158,19 @@ public class JFMigrate {
                         m.up();
 
                         Savepoint save = null;
+                        String[] scriptVersionCheck = null;
                         if (out == null) {
                             save = conn.setSavepoint();
                         } else {
                             out.write(String.format("-- Migration %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+
+                            scriptVersionCheck = helper.getScriptCheckMigrationUpVersionCommand();
+                            if (scriptVersionCheck != null) {
+                                out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                                out.write(System.lineSeparator());
+                            }
                         }
                         PreparedStatement st;
                         try {
@@ -214,6 +221,10 @@ public class JFMigrate {
                             }
 
                             if (out != null) {
+                                if (scriptVersionCheck != null) {
+                                    out.write(scriptVersionCheck[1]);
+                                    out.write(System.lineSeparator());
+                                }
                                 out.write("--------------------------------------------");
                                 out.write(System.lineSeparator());
                                 out.write(System.lineSeparator());
@@ -301,6 +312,7 @@ public class JFMigrate {
                         m.down();
 
                         Savepoint save = null;
+                        String[] scriptVersionCheck = null;
                         if (out == null) {
                             save = conn.setSavepoint();
                         } else {
@@ -308,6 +320,13 @@ public class JFMigrate {
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
                         }
+
+                        scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
+                        if (scriptVersionCheck != null) {
+                            out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                            out.write(System.lineSeparator());
+                        }
+
                         PreparedStatement st;
                         try {
                             if (out == null) {
@@ -346,12 +365,6 @@ public class JFMigrate {
                                             out.write(System.lineSeparator());
                                             out.write(System.lineSeparator());
                                         }
-                                        if (out != null) {
-                                            out.write("--------------------------------------------");
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                        }
                                     }
                                 }
                             }
@@ -364,6 +377,17 @@ public class JFMigrate {
                                 st.executeUpdate();
                             } else {
                                 out.write(st.toString().trim());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
+
+                            if (out != null) {
+                                if (scriptVersionCheck != null) {
+                                    out.write(scriptVersionCheck[1]);
+                                    out.write(System.lineSeparator());
+                                }
+                                out.write("--------------------------------------------");
+                                out.write(System.lineSeparator());
                                 out.write(System.lineSeparator());
                                 out.write(System.lineSeparator());
                             }

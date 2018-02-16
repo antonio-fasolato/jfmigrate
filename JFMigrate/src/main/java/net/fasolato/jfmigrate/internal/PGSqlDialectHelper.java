@@ -77,6 +77,44 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return sql;
     }
 
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += " DO  \n";
+        sql += " $do$  \n";
+        sql += " BEGIN  \n";
+        sql += " 	if not exists (select * from jfmigratedbversion where version = ?) then  \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "     end if;  \n";
+        sql += " END  \n";
+        sql += " $do$;  \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += " DO  \n";
+        sql += " $do$  \n";
+        sql += " BEGIN  \n";
+        sql += " 	if exists (select * from jfmigratedbversion where version = ?) then  \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "     end if;  \n";
+        sql += " END  \n";
+        sql += " $do$;  \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
     public String[] getTableCreationCommand(Table t) {
         List<String> toReturn = new ArrayList<String>();
         String sql = "";
@@ -127,10 +165,10 @@ public class PGSqlDialectHelper implements IDialectHelper {
             }
             sql += " ) ";
 
-            if(k.isOnDeleteCascade()) {
+            if (k.isOnDeleteCascade()) {
                 sql += " ON DELETE CASCADE ";
             }
-            if(k.isOnUpdateCascade()) {
+            if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
             sql += ";";
@@ -244,7 +282,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        for(Map<String, Object> m:d.getData()) {
+        for (Map<String, Object> m : d.getData()) {
             String sql = "";
             List<Object> values = new ArrayList<Object>();
 
@@ -278,7 +316,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        if(!d.isAllRows()) {
+        if (!d.isAllRows()) {
             for (Map<String, Object> w : d.getWhere()) {
                 String sql = "";
                 List<Object> values = new ArrayList<Object>();
@@ -322,7 +360,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 }
                 j++;
             }
-            if(!d.isAllRows()) {
+            if (!d.isAllRows()) {
                 sql += " WHERE 1 = 1 ";
                 for (Map<String, Object> w : d.getWhere()) {
                     for (String k : w.keySet()) {

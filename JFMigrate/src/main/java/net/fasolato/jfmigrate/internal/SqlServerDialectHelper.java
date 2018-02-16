@@ -84,6 +84,36 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return sql;
     }
 
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += "IF not exists (select * from jfmigratedbversion where version = ?) \n";
+        sql += "BEGIN \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "END \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += "IF exists (select * from jfmigratedbversion where version = ?) \n";
+        sql += "BEGIN \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "END \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
     public String[] getTableCreationCommand(Table t) {
         List<String> toReturn = new ArrayList<String>();
         String sql = "";
