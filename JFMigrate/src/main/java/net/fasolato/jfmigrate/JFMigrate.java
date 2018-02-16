@@ -270,7 +270,10 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            long dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = Long.MAX_VALUE;
+            if (out == null) {
+                dbVersion = getDatabaseVersion(helper, conn);
+            }
             log.info("Current database version: {}", dbVersion);
 
             if (dbVersion <= 0) {
@@ -293,16 +296,25 @@ public class JFMigrate {
                         log.debug("Applying migration DOWN {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.down();
 
-                        Savepoint save = conn.setSavepoint();
+                        Savepoint save = null;
+                        if (out == null) {
+                            save = conn.setSavepoint();
+                        } else {
+                            out.write(String.format("-- Migration down %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
                         PreparedStatement st;
                         try {
-                            String testVersionSql = helper.getSearchDatabaseVersionCommand();
-                            st = new LoggablePreparedStatement(conn, testVersionSql);
-                            st.setLong(1, m.getMigrationNumber());
-                            log.info("Executing{}{}", System.lineSeparator(), st);
-                            ResultSet rs = st.executeQuery();
-                            if (!rs.next()) {
-                                throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
+                            if (out == null) {
+                                String testVersionSql = helper.getSearchDatabaseVersionCommand();
+                                st = new LoggablePreparedStatement(conn, testVersionSql);
+                                st.setLong(1, m.getMigrationNumber());
+                                log.info("Executing{}{}", System.lineSeparator(), st);
+                                ResultSet rs = st.executeQuery();
+                                if (!rs.next()) {
+                                    throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
+                                }
                             }
 
                             for (Change c : m.migration.getChanges()) {
@@ -313,11 +325,29 @@ public class JFMigrate {
                                             st.setObject(i + 1, commands.getB()[i]);
                                         }
                                         log.info("Executing{}{}", System.lineSeparator(), st);
-                                        st.executeUpdate();
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
                                     } else {
                                         st = new LoggablePreparedStatement(conn, commands.getA());
                                         log.info("Executing{}{}", System.lineSeparator(), st);
-                                        st.executeUpdate();
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
+                                        if (out != null) {
+                                            out.write("--------------------------------------------");
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
                                     }
                                 }
                             }
@@ -326,11 +356,19 @@ public class JFMigrate {
                             st = new LoggablePreparedStatement(conn, migrationVersionCommand);
                             st.setLong(1, m.getMigrationNumber());
                             log.info("Executing{}{}", System.lineSeparator(), st);
-                            st.executeUpdate();
+                            if (out == null) {
+                                st.executeUpdate();
+                            } else {
+                                out.write(st.toString().trim());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
 
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
-                            conn.rollback(save);
+                            if(out == null) {
+                                conn.rollback(save);
+                            }
                             throw e;
                         }
                     } else {
@@ -343,7 +381,9 @@ public class JFMigrate {
                 }
             }
 
-            conn.commit();
+            if(out == null) {
+                conn.commit();
+            }
         } catch (Exception e) {
             if (conn != null) {
                 conn.rollback();
