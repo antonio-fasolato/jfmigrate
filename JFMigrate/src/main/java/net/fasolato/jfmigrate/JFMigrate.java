@@ -127,7 +127,7 @@ public class JFMigrate {
 
             long dbVersion = 0;
             if (out == null) {
-                getDatabaseVersion(helper, conn);
+                dbVersion = getDatabaseVersion(helper, conn);
             } else if (createVersionInfoTable) {
                 out.write("-- Version table");
                 out.write(System.lineSeparator());
