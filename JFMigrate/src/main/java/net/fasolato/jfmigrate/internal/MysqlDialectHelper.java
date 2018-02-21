@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.Column;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.Index;
@@ -8,8 +9,28 @@ import net.fasolato.jfmigrate.builders.Table;
 import java.util.List;
 
 public class MysqlDialectHelper implements IDialectHelper {
+
+    private String schema;
+
+    public MysqlDialectHelper(String schema) {
+        if (schema == null || "".equals(schema)) {
+            throw new JFException("Schema is null or empty. Mysql dialect needs a schema name");
+        }
+
+        this.schema = schema;
+    }
+
     public String getDatabaseVersionTableExistenceCommand() {
-        return null;
+        String sql = "";
+
+        sql += "	SELECT count(*) as count ";
+        sql += "	FROM information_schema.tables ";
+        sql += "	WHERE 1 = 1 ";
+        sql += "		AND table_schema = '" + schema + "' ";
+        sql += "	    AND table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "' ";
+        sql += "	LIMIT 1; ";
+
+        return sql;
     }
 
     public String getDatabaseVersionCommand() {

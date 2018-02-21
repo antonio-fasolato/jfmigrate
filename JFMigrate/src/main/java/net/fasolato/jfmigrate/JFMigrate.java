@@ -19,6 +19,7 @@ public class JFMigrate {
 
     private List<String> packages;
     private SqlDialect dialect;
+    private String schema;
 
     public JFMigrate() {
         Properties properties = new Properties();
@@ -62,7 +63,7 @@ public class JFMigrate {
             case PGSQL:
                 return new PGSqlDialectHelper();
             case MYSQL:
-                return new MysqlDialectHelper();
+                return new MysqlDialectHelper(schema);
             default:
                 throw new NotImplementedException();
         }
@@ -436,5 +437,13 @@ public class JFMigrate {
                 log.error(ex);
             }
         }
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 }
