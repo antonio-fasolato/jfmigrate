@@ -34,23 +34,58 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String getDatabaseVersionCommand() {
-        return null;
+        String sql = "";
+
+        sql += "select coalesce(max(version), 0) as version from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
+
+        return sql;
     }
 
     public String getSearchDatabaseVersionCommand() {
-        return null;
+        String sql = "";
+
+        sql += " select version  ";
+        sql += " from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " where 1 = 1 ";
+        sql += " 	and version = ? ";
+        sql += ";";
+
+        return sql;
     }
 
     public String getVersionTableCreationCommand() {
-        return null;
+        String sql = "";
+
+        sql += "CREATE TABLE " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + "(";
+        sql += "	version bigint(20) NOT NULL,";
+        sql += "	appliedat timestamp NOT NULL,";
+        sql += "	migrationname varchar(255) NOT NULL,";
+        sql += " PRIMARY KEY(version) ";
+        sql += ")";
+
+        return sql;
     }
 
     public String getInsertNewVersionCommand() {
-        return null;
+        String sql = "";
+
+        sql += "insert into " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += "	(version, appliedat, migrationname)";
+        sql += "values";
+        sql += "	(?, CURRENT_TIMESTAMP(), ?);";
+
+        return sql;
     }
 
     public String getDeleteVersionCommand() {
-        return null;
+        String sql = "";
+
+        sql += " delete from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += " where 1 = 1 ";
+        sql += "	and version = ? ";
+        sql += ";";
+
+        return sql;
     }
 
     public String[] getScriptCheckMigrationUpVersionCommand() {
