@@ -24,6 +24,10 @@ public interface IDialectHelper {
 
     String getDeleteVersionCommand();
 
+    String[] getScriptCheckMigrationUpVersionCommand();
+
+    String[] getScriptCheckMigrationDownVersionCommand();
+
     String[] getTableCreationCommand(Table t);
 
     String[] getIndexCreationCommand(Index i);

@@ -22,7 +22,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += "    FROM INFORMATION_SCHEMA.TABLES ";
         sql += "    WHERE 1 = 1";
 //        sql += "		and TABLE_SCHEMA = 'dbo' ";
-        sql += "        AND  TABLE_NAME = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'";
+        sql += "        AND  TABLE_NAME = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "';";
 
         return sql;
     }
@@ -30,7 +30,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
     public String getDatabaseVersionCommand() {
         String sql = "";
 
-        sql += "select isnull(max(version), 0) as version from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += "select isnull(max(version), 0) as version from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
 
         return sql;
     }
@@ -42,6 +42,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += " from jfmigratedbversion  ";
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
+        sql += ";";
 
         return sql;
     }
@@ -56,7 +57,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += " CONSTRAINT [PK_jfmigratedbversion] PRIMARY KEY CLUSTERED ";
         sql += "(";
         sql += "	[version] ASC";
-        sql += "))";
+        sql += "));";
 
         return sql;
     }
@@ -67,7 +68,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += "insert into " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
-        sql += "	(?, GETDATE(), ?)";
+        sql += "	(?, GETDATE(), ?);";
 
         return sql;
     }
@@ -78,8 +79,39 @@ public class SqlServerDialectHelper implements IDialectHelper {
         sql += " delete from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += " where 1 = 1 ";
         sql += "	and version = ? ";
+        sql += ";";
 
         return sql;
+    }
+
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += "IF not exists (select * from jfmigratedbversion where version = ?) \n";
+        sql += "BEGIN \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "END \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += "IF exists (select * from jfmigratedbversion where version = ?) \n";
+        sql += "BEGIN \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "END \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public String[] getTableCreationCommand(Table t) {
@@ -146,6 +178,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += " ON UPDATE CASCADE ";
             }
 
+            sql += ";";
+
             toReturn.add(sql);
         }
 
@@ -167,7 +201,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += ", ";
             }
         }
-        sql += " ) ";
+        sql += " ); ";
         toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
@@ -261,6 +295,9 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
             }
+
+            sql += ";";
+
             toReturn.add(sql);
         }
 
@@ -293,7 +330,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 }
                 i++;
             }
-            sql += " ) ";
+            sql += " ); ";
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }
@@ -314,11 +351,12 @@ public class SqlServerDialectHelper implements IDialectHelper {
                     sql += " AND " + k + " = ? ";
                     values.add(w.get(k));
                 }
+                sql += ";";
 
                 toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
             }
         } else {
-            String sql = " DELETE " + d.getTableName();
+            String sql = " DELETE " + d.getTableName() + "; ";
             toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
 
@@ -353,6 +391,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
                     }
                 }
             }
+
+            sql += ";";
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }

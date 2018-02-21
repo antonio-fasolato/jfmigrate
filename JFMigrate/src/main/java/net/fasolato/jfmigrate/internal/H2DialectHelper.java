@@ -13,7 +13,7 @@ public class H2DialectHelper implements IDialectHelper {
         sql += " SELECT COUNT(*) AS count  ";
         sql += " FROM information_schema.tables  ";
         sql += " WHERE 1 = 1  ";
-        sql += "   and table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME.toUpperCase() + "' ";
+        sql += "   and table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME.toUpperCase() + "'; ";
 
         return sql;
     }
@@ -22,7 +22,7 @@ public class H2DialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " select ifnull(max(version), 0) ";
-        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
 
         return sql;
     }
@@ -34,6 +34,7 @@ public class H2DialectHelper implements IDialectHelper {
         sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
+        sql += ";";
 
         return sql;
     }
@@ -45,7 +46,7 @@ public class H2DialectHelper implements IDialectHelper {
         sql += "   version bigint primary key, ";
         sql += "   appliedat timestamp not null, ";
         sql += "   migrationname varchar(255) not null ";
-        sql += " ) ";
+        sql += " ); ";
 
         return sql;
     }
@@ -57,6 +58,7 @@ public class H2DialectHelper implements IDialectHelper {
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
         sql += "	(?, CURRENT_TIMESTAMP(), ?)";
+        sql += "; ";
 
         return sql;
     }
@@ -67,8 +69,17 @@ public class H2DialectHelper implements IDialectHelper {
         sql += " delete from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += " where 1 = 1 ";
         sql += "	and version = ? ";
+        sql += ";";
 
         return sql;
+    }
+
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        return new String[0];
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        return new String[0];
     }
 
     public String[] getTableCreationCommand(Table t) {
@@ -127,6 +138,7 @@ public class H2DialectHelper implements IDialectHelper {
             if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
+            sql += ";";
 
             toReturn.add(sql);
         }
@@ -149,7 +161,7 @@ public class H2DialectHelper implements IDialectHelper {
                 sql += ", ";
             }
         }
-        sql += " ) ";
+        sql += " ); ";
         toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
@@ -227,6 +239,7 @@ public class H2DialectHelper implements IDialectHelper {
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
             }
+            sql += ";";
             toReturn.add(sql);
         }
 
@@ -259,7 +272,7 @@ public class H2DialectHelper implements IDialectHelper {
                 }
                 i++;
             }
-            sql += " ) ";
+            sql += " ); ";
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }
@@ -280,11 +293,12 @@ public class H2DialectHelper implements IDialectHelper {
                     sql += " AND " + k + " = ? ";
                     values.add(w.get(k));
                 }
+                sql += ";";
 
                 toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
             }
         } else {
-            String sql = " DELETE " + d.getTableName();
+            String sql = " DELETE " + d.getTableName() + "; ";
 
             toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
@@ -320,6 +334,7 @@ public class H2DialectHelper implements IDialectHelper {
                     }
                 }
             }
+            sql += ";";
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }
