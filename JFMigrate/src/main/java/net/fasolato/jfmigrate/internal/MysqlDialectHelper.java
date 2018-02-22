@@ -218,7 +218,11 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getColumnDropCommand(Column c) {
-        return new String[0];
+        String sql = "";
+
+        sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getTableRenameCommand(Table t) {
