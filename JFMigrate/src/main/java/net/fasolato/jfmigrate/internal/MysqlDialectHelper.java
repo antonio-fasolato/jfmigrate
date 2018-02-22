@@ -226,7 +226,11 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getTableRenameCommand(Table t) {
-        return new String[0];
+        String sql = "";
+
+        sql += " RENAME TABLE " + t.getName() + " TO " + t.getNewName() + ";";
+
+        return new String[]{sql};
     }
 
     public String[] getColumnRenameCommand(Column c) {
