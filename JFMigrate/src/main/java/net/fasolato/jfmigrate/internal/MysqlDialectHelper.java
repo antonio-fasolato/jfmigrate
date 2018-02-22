@@ -202,7 +202,11 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getTableDropCommand(Table t) {
-        return new String[0];
+        String sql = "";
+
+        sql += " DROP TABLE " + t.getName() + " ;";
+
+        return new String[]{sql};
     }
 
     public String[] getIndexDropCommand(Index i) {
