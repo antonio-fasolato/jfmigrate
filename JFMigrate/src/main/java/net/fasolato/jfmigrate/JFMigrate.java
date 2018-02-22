@@ -238,7 +238,11 @@ public class JFMigrate {
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
                             if (conn != null && save != null) {
-                                conn.rollback(save);
+                                try {
+                                    conn.rollback(save);
+                                } catch (Exception ex) {
+                                    log.error("Error rolling back", ex);
+                                }
                             }
                             throw e;
                         }
