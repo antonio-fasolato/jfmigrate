@@ -1,11 +1,10 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
-import net.fasolato.jfmigrate.builders.Column;
-import net.fasolato.jfmigrate.builders.Data;
-import net.fasolato.jfmigrate.builders.Index;
-import net.fasolato.jfmigrate.builders.Table;
+import net.fasolato.jfmigrate.builders.*;
 
+import java.sql.JDBCType;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MysqlDialectHelper implements IDialectHelper {
@@ -97,7 +96,88 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getTableCreationCommand(Table t) {
-        return new String[0];
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+        List<String> primaryKeys = new ArrayList<String>();
+
+        sql += " CREATE TABLE ";
+        sql += t.getName();
+        sql += " ( ";
+        int i = 0;
+        for (Column c : t.getChanges()) {
+            i++;
+            if (c.getOperationType() == OperationType.create) {
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+                    throw new JFException("VARCHAR size is required in MySql");
+                }
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+                if (i < t.getChanges().size()) {
+                    sql += ", ";
+                }
+                if (c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
+            }
+        }
+        if (!primaryKeys.isEmpty()) {
+            sql += " , primary key (";
+            int k = 1;
+            for (String c : primaryKeys) {
+                sql += c;
+                if (k < primaryKeys.size()) {
+                    sql += ", ";
+                }
+                k++;
+            }
+            sql += ") ";
+        }
+
+        for (ForeignKey k : t.getAddedForeignKeys()) {
+            sql += ", FOREIGN KEY " + k.getName() + " (";
+            for (i = 0; i < k.getForeignColumns().size(); i++) {
+                String c = k.getForeignColumns().get(i);
+                sql += " " + c;
+                if (i < k.getForeignColumns().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += ") ";
+            sql += " REFERENCES " + k.getFromTable() + "( ";
+            for (i = 0; i < k.getPrimaryKeys().size(); i++) {
+                String c = k.getPrimaryKeys().get(i);
+                sql += " " + c;
+                if (i < k.getPrimaryKeys().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += " ) ";
+
+            if (k.isOnDeleteCascade()) {
+                sql += " ON DELETE CASCADE ";
+            }
+            if (k.isOnUpdateCascade()) {
+                sql += " ON UPDATE CASCADE ";
+            }
+        }
+
+        sql += " );";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public String[] getIndexCreationCommand(Index i) {
