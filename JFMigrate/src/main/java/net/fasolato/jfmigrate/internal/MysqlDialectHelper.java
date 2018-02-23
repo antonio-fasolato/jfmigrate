@@ -261,7 +261,58 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getAlterTableCommand(Table t) {
-        return new String[0];
+        List<String> toReturn = new ArrayList<String>();
+
+        for (Column c : t.getChanges()) {
+            String sql = "";
+            if (c.getOperationType() == OperationType.create) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ADD ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            } else if (c.getOperationType() == OperationType.alter) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " MODIFY ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            }
+
+            sql += ";";
+
+            toReturn.add(sql);
+        }
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {
