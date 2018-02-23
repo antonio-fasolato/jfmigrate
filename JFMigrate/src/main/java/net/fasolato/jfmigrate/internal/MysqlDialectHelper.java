@@ -234,7 +234,30 @@ public class MysqlDialectHelper implements IDialectHelper {
     }
 
     public String[] getColumnRenameCommand(Column c) {
-        return new String[0];
+        String sql = "";
+
+        if (c.getType() == null) {
+            throw new JFException(String.format("Mysql rename column needs to specify the new column type. table: %s, column: %s", c.getTableName(), c.getName()));
+        }
+
+        sql += " ALTER TABLE " + c.getTableName() + " CHANGE " + c.getName() + " " + c.getNewName() + " ";
+        if (c.getType().equals(JDBCType.BOOLEAN)) {
+            sql += "BIT ";
+        } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+            sql += "DATETIME ";
+        } else {
+            sql += c.getType() + " ";
+        }
+        if (c.getPrecision() != null) {
+            sql += "(" + c.getPrecision();
+            sql += c.getScale() != null ? "," + c.getScale() : "";
+            sql += ")";
+        }
+        if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+            throw new JFException("VARCHAR size is required in MySql");
+        }
+
+        return new String[]{sql};
     }
 
     public String[] getAlterTableCommand(Table t) {
