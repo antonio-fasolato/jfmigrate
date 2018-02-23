@@ -35,12 +35,12 @@ public class JFMigrationFluent {
         return t;
     }
 
-    public Table renameColumn(String tableName, String columnName, String newColumnName) {
+    public Column renameColumn(String tableName, String columnName, String newColumnName) {
         Column c = new Column(columnName, OperationType.rename);
         c.setTableName(tableName);
         c.setNewName(newColumnName);
         changes.add(c);
-        return null;
+        return c;
     }
 
     public Index createIndex(String name) {

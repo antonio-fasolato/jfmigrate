@@ -19,6 +19,7 @@ public class JFMigrate {
 
     private List<String> packages;
     private SqlDialect dialect;
+    private String schema;
 
     public JFMigrate() {
         Properties properties = new Properties();
@@ -35,6 +36,8 @@ public class JFMigrate {
                 dialect = SqlDialect.SQL_SERVER;
             } else if (configDialect.equalsIgnoreCase("pgsql")) {
                 dialect = SqlDialect.PGSQL;
+            } else if (configDialect.equalsIgnoreCase("mysql")) {
+                dialect = SqlDialect.MYSQL;
             }
         } catch (IOException e) {
             log.error(e);
@@ -59,6 +62,8 @@ public class JFMigrate {
                 return new H2DialectHelper();
             case PGSQL:
                 return new PGSqlDialectHelper();
+            case MYSQL:
+                return new MysqlDialectHelper(schema);
             default:
                 throw new NotImplementedException();
         }
@@ -233,7 +238,11 @@ public class JFMigrate {
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
                             if (conn != null && save != null) {
-                                conn.rollback(save);
+                                try {
+                                    conn.rollback(save);
+                                } catch (Exception ex) {
+                                    log.error("Error rolling back", ex);
+                                }
                             }
                             throw e;
                         }
@@ -432,5 +441,13 @@ public class JFMigrate {
                 log.error(ex);
             }
         }
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 }
