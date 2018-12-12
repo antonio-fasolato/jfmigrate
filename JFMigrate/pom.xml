@@ -8,6 +8,28 @@
     <artifactId>JFMigrate</artifactId>
     <version>0.1.0</version>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Antonio Fasolato</name>
+            <email>antonio@fasolato.net</email>
+            <organization>Fasolato.net</organization>
+            <organizationUrl>http://www.fasolato.net</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/antonio-fasolato/jfmigrate.git</connection>
+        <developerConnection>scm:git:ssh://github.com:antonio-fasolato/jfmigrate.git</developerConnection>
+        <url>http://github.com/antonio-fasolato/jfmigrate</url>
+    </scm>
+
+
     <dependencies>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
