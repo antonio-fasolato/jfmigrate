@@ -32,6 +32,7 @@ buildNumber.properties
 JFMigrate/.idea/
 JFMigrate/JFMigrate.iml
 TestPrj/
+.idea/
 
 .classpath
 .project
