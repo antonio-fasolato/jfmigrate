@@ -9,6 +9,8 @@
     <version>0.1.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
+    <description>Java fluent database migration library</description>
+    <url>http://github.com/antonio-fasolato/jfmigrate</url>
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>
@@ -49,6 +51,12 @@
     </dependencies>
 
     <packaging>jar</packaging>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
@@ -88,6 +96,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
             </plugin>
         </plugins>
     </build>
