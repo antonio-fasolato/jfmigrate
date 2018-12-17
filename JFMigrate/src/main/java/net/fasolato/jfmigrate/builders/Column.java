@@ -22,6 +22,7 @@ public class Column implements Change {
     private boolean unique;
     private boolean nullable;
     private boolean identity;
+    private boolean defaultValueSet;
     private Object defaultValue;
     private JDBCType type;
     private Integer precision;
@@ -198,4 +199,11 @@ public class Column implements Change {
         this.operationType = operationType;
     }
 
+    public boolean isDefaultValueSet() {
+        return defaultValueSet;
+    }
+
+    public void setDefaultValueSet(boolean defaultValueSet) {
+        this.defaultValueSet = defaultValueSet;
+    }
 }

@@ -200,6 +200,9 @@ public class JFMigrate {
                                 } else {
                                     for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
                                         st = new LoggablePreparedStatement(conn, commands.getA());
+                                        for (int iv = 0; iv < commands.getB().length; iv++) {
+                                            st.setObject(iv + 1, commands.getB()[iv]);
+                                        }
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.executeUpdate();
