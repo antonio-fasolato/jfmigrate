@@ -26,10 +26,11 @@ public class LoggablePreparedStatement implements PreparedStatement {
     @Override
     public String toString() {
         String toReturn = command;
-        if (!values.isEmpty()) {
-            toReturn += System.lineSeparator() + System.lineSeparator() + "Values:" + System.lineSeparator();
-            for (Integer i : values.keySet()) {
-                toReturn += i + ": " + values.get(i) + System.lineSeparator();
+        for (Integer i : values.keySet()) {
+            if (String.class.isAssignableFrom(values.get(i).getClass())) {
+                toReturn = toReturn.replaceFirst("\\?", "'" + values.get(i).toString() + "'");
+            } else {
+                toReturn = toReturn.replaceFirst("\\?", values.get(i).toString());
             }
         }
         return toReturn;

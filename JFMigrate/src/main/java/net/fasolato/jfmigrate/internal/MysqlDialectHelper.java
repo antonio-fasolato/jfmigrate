@@ -1,19 +1,34 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class H2DialectHelper implements IDialectHelper {
+public class MysqlDialectHelper implements IDialectHelper {
+
+    private String schema;
+
+    public MysqlDialectHelper(String schema) {
+        if (schema == null || "".equals(schema)) {
+            throw new JFException("Schema is null or empty. Mysql dialect needs a schema name");
+        }
+
+        this.schema = schema;
+    }
+
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
-        sql += " SELECT COUNT(*) AS count  ";
-        sql += " FROM information_schema.tables  ";
-        sql += " WHERE 1 = 1  ";
-        sql += "   and table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME.toUpperCase() + "'; ";
+        sql += "	SELECT count(*) as count ";
+        sql += "	FROM information_schema.tables ";
+        sql += "	WHERE 1 = 1 ";
+        sql += "		AND table_schema = '" + schema + "' ";
+        sql += "	    AND table_name = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "' ";
+        sql += "	LIMIT 1; ";
 
         return sql;
     }
@@ -21,8 +36,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String getDatabaseVersionCommand() {
         String sql = "";
 
-        sql += " select ifnull(max(version), 0) ";
-        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
+        sql += "select coalesce(max(version), 0) as version from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
 
         return sql;
     }
@@ -31,7 +45,7 @@ public class H2DialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " select version  ";
-        sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
+        sql += " from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME;
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
         sql += ";";
@@ -42,11 +56,12 @@ public class H2DialectHelper implements IDialectHelper {
     public String getVersionTableCreationCommand() {
         String sql = "";
 
-        sql += " create table " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ( ";
-        sql += "   version bigint primary key, ";
-        sql += "   appliedat timestamp not null, ";
-        sql += "   migrationname varchar(255) not null ";
-        sql += " ); ";
+        sql += "CREATE TABLE " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + "(";
+        sql += "	version bigint(20) NOT NULL,";
+        sql += "	appliedat timestamp NOT NULL,";
+        sql += "	migrationname varchar(255) NOT NULL,";
+        sql += " PRIMARY KEY(version) ";
+        sql += ")";
 
         return sql;
     }
@@ -54,11 +69,10 @@ public class H2DialectHelper implements IDialectHelper {
     public String getInsertNewVersionCommand() {
         String sql = "";
 
-        sql += "insert into " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += "insert into " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
-        sql += "	(?, CURRENT_TIMESTAMP(), ?)";
-        sql += "; ";
+        sql += "	(?, CURRENT_TIMESTAMP(), ?);";
 
         return sql;
     }
@@ -66,7 +80,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String getDeleteVersionCommand() {
         String sql = "";
 
-        sql += " delete from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
+        sql += " delete from " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += " where 1 = 1 ";
         sql += "	and version = ? ";
         sql += ";";
@@ -85,6 +99,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String[] getTableCreationCommand(Table t) {
         List<String> toReturn = new ArrayList<String>();
         String sql = "";
+        List<String> primaryKeys = new ArrayList<String>();
 
         sql += " CREATE TABLE ";
         sql += t.getName();
@@ -93,27 +108,47 @@ public class H2DialectHelper implements IDialectHelper {
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+                    throw new JFException("VARCHAR size is required in MySql");
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
+                if (c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
             }
         }
-        sql += " );";
-        toReturn.add(sql);
+        if (!primaryKeys.isEmpty()) {
+            sql += " , primary key (";
+            int k = 1;
+            for (String c : primaryKeys) {
+                sql += c;
+                if (k < primaryKeys.size()) {
+                    sql += ", ";
+                }
+                k++;
+            }
+            sql += ") ";
+        }
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
-            sql = "";
-            sql += "ALTER TABLE " + k.getFromTable() + " ";
-            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
+            sql += ", FOREIGN KEY " + k.getName() + " (";
             for (i = 0; i < k.getForeignColumns().size(); i++) {
                 String c = k.getForeignColumns().get(i);
                 sql += " " + c;
@@ -121,8 +156,8 @@ public class H2DialectHelper implements IDialectHelper {
                     sql += ", ";
                 }
             }
-            sql += " ) ";
-            sql += "    REFERENCES " + k.getToTable() + " ( ";
+            sql += ") ";
+            sql += " REFERENCES " + k.getFromTable() + "( ";
             for (i = 0; i < k.getPrimaryKeys().size(); i++) {
                 String c = k.getPrimaryKeys().get(i);
                 sql += " " + c;
@@ -138,10 +173,10 @@ public class H2DialectHelper implements IDialectHelper {
             if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
-            sql += ";";
-
-            toReturn.add(sql);
         }
+
+        sql += " );";
+        toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
     }
@@ -178,7 +213,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String[] getIndexDropCommand(Index i) {
         String sql = "";
 
-        sql += " DROP INDEX " + i.getName() + " ;";
+        sql += " DROP INDEX " + i.getName() + " ON " + i.getTableName() + " ;";
 
         return new String[]{sql};
     }
@@ -194,7 +229,7 @@ public class H2DialectHelper implements IDialectHelper {
     public String[] getTableRenameCommand(Table t) {
         String sql = "";
 
-        sql += " ALTER TABLE " + t.getName() + " RENAME TO " + t.getNewName() + " ;";
+        sql += " RENAME TABLE " + t.getName() + " TO " + t.getNewName() + ";";
 
         return new String[]{sql};
     }
@@ -202,7 +237,26 @@ public class H2DialectHelper implements IDialectHelper {
     public String[] getColumnRenameCommand(Column c) {
         String sql = "";
 
-        sql += " ALTER TABLE " + c.getTableName() + " ALTER COLUMN " + c.getName() + " RENAME TO " + c.getNewName() + " ;";
+        if (c.getType() == null) {
+            throw new JFException(String.format("Mysql rename column needs to specify the new column type. table: %s, column: %s", c.getTableName(), c.getName()));
+        }
+
+        sql += " ALTER TABLE " + c.getTableName() + " CHANGE " + c.getName() + " " + c.getNewName() + " ";
+        if (c.getType().equals(JDBCType.BOOLEAN)) {
+            sql += "BIT ";
+        } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+            sql += "DATETIME ";
+        } else {
+            sql += c.getType() + " ";
+        }
+        if (c.getPrecision() != null) {
+            sql += "(" + c.getPrecision();
+            sql += c.getScale() != null ? "," + c.getScale() : "";
+            sql += ")";
+        }
+        if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+            throw new JFException("VARCHAR size is required in MySql");
+        }
 
         return new String[]{sql};
     }
@@ -215,8 +269,15 @@ public class H2DialectHelper implements IDialectHelper {
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
-                sql += " ADD COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += " ADD ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -228,8 +289,15 @@ public class H2DialectHelper implements IDialectHelper {
             } else if (c.getOperationType() == OperationType.alter) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
-                sql += " ALTER COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += " MODIFY ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -239,7 +307,9 @@ public class H2DialectHelper implements IDialectHelper {
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
             }
+
             sql += ";";
+
             toReturn.add(sql);
         }
 
@@ -257,7 +327,7 @@ public class H2DialectHelper implements IDialectHelper {
             int i = 0;
             for (String k : m.keySet()) {
                 sql += k;
-                if (i < m.size() - 1) {
+                if (i < m.keySet().size() - 1) {
                     sql += ", ";
                 }
                 i++;
@@ -288,7 +358,7 @@ public class H2DialectHelper implements IDialectHelper {
                 String sql = "";
                 List<Object> values = new ArrayList<Object>();
 
-                sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
+                sql += " DELETE FROM " + d.getTableName() + " WHERE 1 = 1 ";
                 for (String k : w.keySet()) {
                     sql += " AND " + k + " = ? ";
                     values.add(w.get(k));
@@ -298,8 +368,7 @@ public class H2DialectHelper implements IDialectHelper {
                 toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
             }
         } else {
-            String sql = " DELETE " + d.getTableName() + "; ";
-
+            String sql = " DELETE FROM " + d.getTableName() + "; ";
             toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
 
@@ -334,6 +403,7 @@ public class H2DialectHelper implements IDialectHelper {
                     }
                 }
             }
+
             sql += ";";
 
             toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));

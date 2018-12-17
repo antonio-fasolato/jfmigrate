@@ -9,6 +9,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.sql.*;
 import java.util.*;
 
@@ -17,6 +19,7 @@ public class JFMigrate {
 
     private List<String> packages;
     private SqlDialect dialect;
+    private String schema;
 
     public JFMigrate() {
         Properties properties = new Properties();
@@ -33,6 +36,8 @@ public class JFMigrate {
                 dialect = SqlDialect.SQL_SERVER;
             } else if (configDialect.equalsIgnoreCase("pgsql")) {
                 dialect = SqlDialect.PGSQL;
+            } else if (configDialect.equalsIgnoreCase("mysql")) {
+                dialect = SqlDialect.MYSQL;
             }
         } catch (IOException e) {
             log.error(e);
@@ -57,6 +62,8 @@ public class JFMigrate {
                 return new H2DialectHelper();
             case PGSQL:
                 return new PGSqlDialectHelper();
+            case MYSQL:
+                return new MysqlDialectHelper(schema);
             default:
                 throw new NotImplementedException();
         }
@@ -103,6 +110,18 @@ public class JFMigrate {
     }
 
     public void migrateUp() throws Exception {
+        migrateUp(-1, null, false);
+    }
+
+    public void migrateUp(Writer out) throws Exception {
+        migrateUp(-1, out, false);
+    }
+
+    public void migrateUp(Writer out, boolean createVersionInfoTable) throws Exception {
+        migrateUp(-1, out, createVersionInfoTable);
+    }
+
+    public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -111,7 +130,21 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            long dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = 0;
+            if (out == null) {
+                dbVersion = getDatabaseVersion(helper, conn);
+            } else if (createVersionInfoTable) {
+                out.write("-- Version table");
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write(helper.getVersionTableCreationCommand());
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write("--------------------------------------------");
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+                out.write(System.lineSeparator());
+            }
             log.info("Current database version: {}", dbVersion);
 
             for (String p : packages) {
@@ -125,27 +158,56 @@ public class JFMigrate {
                 });
 
                 for (JFMigrationClass m : migrations) {
-                    if (m.getMigrationNumber() > dbVersion) {
+                    if (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber)) {
                         log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
-                        Savepoint save = conn.setSavepoint();
+                        Savepoint save = null;
+                        String[] scriptVersionCheck = null;
+                        if (out == null) {
+                            save = conn.setSavepoint();
+                        } else {
+                            out.write(String.format("-- Migration %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+
+                            scriptVersionCheck = helper.getScriptCheckMigrationUpVersionCommand();
+                            if (scriptVersionCheck != null) {
+                                out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                                out.write(System.lineSeparator());
+                            }
+                        }
                         PreparedStatement st;
                         try {
                             for (Change c : m.migration.getChanges()) {
                                 if (Data.class.isAssignableFrom(c.getClass())) {
                                     Data d = (Data) c;
-                                    st = new LoggablePreparedStatement(conn, d.getSqlCommand(helper)[0]);
-                                    for (int iv = 0; iv < d.getValues().length; iv++) {
-                                        st.setObject(iv + 1, d.getValues()[iv]);
-                                    }
-                                    log.info("Executing{}{}", System.lineSeparator(), st);
-                                    st.executeUpdate();
-                                } else {
-                                    for (String sql : c.getSqlCommand(helper)) {
-                                        st = new LoggablePreparedStatement(conn, sql);
+
+                                    for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        for (int iv = 0; iv < commands.getB().length; iv++) {
+                                            st.setObject(iv + 1, commands.getB()[iv]);
+                                        }
                                         log.info("Executing{}{}", System.lineSeparator(), st);
-                                        st.executeUpdate();
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
+                                    }
+                                } else {
+                                    for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
                                     }
                                 }
                             }
@@ -155,26 +217,58 @@ public class JFMigrate {
                             st.setLong(1, m.getMigrationNumber());
                             st.setString(2, m.getMigrationName());
                             log.info("Executing{}{}", System.lineSeparator(), st);
-                            st.executeUpdate();
+                            if (out == null) {
+                                st.executeUpdate();
+                            } else {
+                                out.write(st.toString().trim());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
 
+                            if (out != null) {
+                                if (scriptVersionCheck != null) {
+                                    out.write(scriptVersionCheck[1]);
+                                    out.write(System.lineSeparator());
+                                }
+                                out.write("--------------------------------------------");
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
-                            conn.rollback(save);
+                            if (conn != null && save != null) {
+                                try {
+                                    conn.rollback(save);
+                                } catch (Exception ex) {
+                                    log.error("Error rolling back", ex);
+                                }
+                            }
                             throw e;
                         }
                     } else {
-                        log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
+                        if (m.getMigrationNumber() <= dbVersion) {
+                            log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
+                        } else {
+                            log.info("Skipping migration {} because lower than selected start migration number ({})", m.getMigrationNumber(), startMigrationNumber);
+                        }
                     }
                 }
             }
 
-            conn.commit();
+            if (conn != null) {
+                conn.commit();
+            }
         } catch (Exception e) {
             if (conn != null) {
-                conn.rollback();
-                log.error("Connection rolled back");
+                try {
+                    conn.rollback();
+                    log.error("Connection rolled back");
+                } catch (Exception ex) {
+                    log.error("Error while rolling back transaction", ex);
+                }
             }
-            log.error(e);
+            log.error("Error executing query", e);
             throw e;
         } finally {
             try {
@@ -188,6 +282,10 @@ public class JFMigrate {
     }
 
     public void migrateDown(int targetMigration) throws Exception {
+        migrateDown(targetMigration, null);
+    }
+
+    public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
@@ -196,7 +294,10 @@ public class JFMigrate {
             conn = dbHelper.getConnection();
             conn.setAutoCommit(false);
 
-            long dbVersion = getDatabaseVersion(helper, conn);
+            long dbVersion = Long.MAX_VALUE;
+            if (out == null) {
+                dbVersion = getDatabaseVersion(helper, conn);
+            }
             log.info("Current database version: {}", dbVersion);
 
             if (dbVersion <= 0) {
@@ -219,23 +320,61 @@ public class JFMigrate {
                         log.debug("Applying migration DOWN {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.down();
 
-                        Savepoint save = conn.setSavepoint();
+                        Savepoint save = null;
+                        String[] scriptVersionCheck = null;
+                        if (out == null) {
+                            save = conn.setSavepoint();
+                        } else {
+                            out.write(String.format("-- Migration down %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
+
+                        scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
+                        if (out != null && scriptVersionCheck != null) {
+                            out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                            out.write(System.lineSeparator());
+                        }
+
                         PreparedStatement st;
                         try {
-                            String testVersionSql = helper.getSearchDatabaseVersionCommand();
-                            st = new LoggablePreparedStatement(conn, testVersionSql);
-                            st.setLong(1, m.getMigrationNumber());
-                            log.info("Executing{}{}", System.lineSeparator(), st);
-                            ResultSet rs = st.executeQuery();
-                            if (!rs.next()) {
-                                throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
+                            if (out == null) {
+                                String testVersionSql = helper.getSearchDatabaseVersionCommand();
+                                st = new LoggablePreparedStatement(conn, testVersionSql);
+                                st.setLong(1, m.getMigrationNumber());
+                                log.info("Executing{}{}", System.lineSeparator(), st);
+                                ResultSet rs = st.executeQuery();
+                                if (!rs.next()) {
+                                    throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
+                                }
                             }
 
                             for (Change c : m.migration.getChanges()) {
-                                for (String sql : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, sql);
-                                    log.info("Executing{}{}", System.lineSeparator(), st);
-                                    st.executeUpdate();
+                                for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                    if (Data.class.isAssignableFrom(c.getClass())) {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        for (int i = 0; i < commands.getB().length; i++) {
+                                            st.setObject(i + 1, commands.getB()[i]);
+                                        }
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
+                                    } else {
+                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        if (out == null) {
+                                            st.executeUpdate();
+                                        } else {
+                                            out.write(st.toString().trim());
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                        }
+                                    }
                                 }
                             }
 
@@ -243,26 +382,55 @@ public class JFMigrate {
                             st = new LoggablePreparedStatement(conn, migrationVersionCommand);
                             st.setLong(1, m.getMigrationNumber());
                             log.info("Executing{}{}", System.lineSeparator(), st);
-                            st.executeUpdate();
+                            if (out == null) {
+                                st.executeUpdate();
+                            } else {
+                                out.write(st.toString().trim());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
+
+                            if (out != null) {
+                                if (scriptVersionCheck != null) {
+                                    out.write(scriptVersionCheck[1]);
+                                    out.write(System.lineSeparator());
+                                }
+                                out.write("--------------------------------------------");
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                                out.write(System.lineSeparator());
+                            }
 
                             log.debug("Applied migration {}", m.getClass().getSimpleName());
                         } catch (Exception e) {
-                            conn.rollback(save);
+                            if (out == null) {
+                                conn.rollback(save);
+                            }
                             throw e;
                         }
                     } else {
-                        log.debug("Skipped migration {}({}) because out of range (db version: {}, target migration: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                        if (m.getMigrationNumber() > dbVersion) {
+                            log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                        } else {
+                            log.debug("Skipped migration {}({}) because out of range (target version: {})", m.getMigrationName(), m.getMigrationNumber(), targetMigration);
+                        }
                     }
                 }
             }
 
-            conn.commit();
+            if (out == null) {
+                conn.commit();
+            }
         } catch (Exception e) {
             if (conn != null) {
-                conn.rollback();
-                log.error("Connection rolled back");
+                try {
+                    conn.rollback();
+                    log.error("Connection rolled back");
+                } catch (Exception ex) {
+                    log.error("Error rolling back connection", ex);
+                }
             }
-            log.error(e);
+            log.error("Error executing query", e);
             throw e;
         } finally {
             try {
@@ -273,5 +441,13 @@ public class JFMigrate {
                 log.error(ex);
             }
         }
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 }

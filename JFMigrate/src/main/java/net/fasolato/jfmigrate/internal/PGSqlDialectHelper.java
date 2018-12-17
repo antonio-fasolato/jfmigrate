@@ -2,7 +2,6 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
         sql += "  WHERE  1 = 1  ";
 //        sql += "   AND n.nspname = 'schema_name'  ";
         sql += "   AND    c.relname = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'  ";
-        sql += " ) a  ";
+        sql += " ) a;  ";
 
         return sql;
     }
@@ -27,7 +26,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
         String sql = "";
 
         sql += " select coalesce(max(version), 0) as version  ";
-        sql += " from jfmigratedbversion  ";
+        sql += " from jfmigratedbversion;  ";
 
         return sql;
     }
@@ -39,6 +38,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
         sql += " from " + JFMigrationConstants.DB_VERSION_TABLE_NAME;
         sql += " where 1 = 1 ";
         sql += " 	and version = ? ";
+        sql += ";";
 
         return sql;
     }
@@ -50,7 +50,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
         sql += "   version bigint primary key,  ";
         sql += "   appliedat timestamp not null,  ";
         sql += "   migrationname varchar(255) not null  ";
-        sql += " )  ";
+        sql += " );  ";
 
         return sql;
     }
@@ -61,7 +61,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
         sql += "insert into " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += "	(version, appliedat, migrationname)";
         sql += "values";
-        sql += "	(?, current_timestamp, ?)";
+        sql += "	(?, current_timestamp, ?);";
 
         return sql;
     }
@@ -72,8 +72,47 @@ public class PGSqlDialectHelper implements IDialectHelper {
         sql += " delete from " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " ";
         sql += " where 1 = 1 ";
         sql += "	and version = ? ";
+        sql += ";";
 
         return sql;
+    }
+
+    public String[] getScriptCheckMigrationUpVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += " DO  \n";
+        sql += " $do$  \n";
+        sql += " BEGIN  \n";
+        sql += " 	if not exists (select * from jfmigratedbversion where version = ?) then  \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "     end if;  \n";
+        sql += " END  \n";
+        sql += " $do$;  \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
+    }
+
+    public String[] getScriptCheckMigrationDownVersionCommand() {
+        List<String> toReturn = new ArrayList<String>();
+        String sql = "";
+
+        sql += " DO  \n";
+        sql += " $do$  \n";
+        sql += " BEGIN  \n";
+        sql += " 	if exists (select * from jfmigratedbversion where version = ?) then  \n";
+        toReturn.add(sql);
+
+        sql = "";
+        sql += "     end if;  \n";
+        sql += " END  \n";
+        sql += " $do$;  \n";
+        toReturn.add(sql);
+
+        return toReturn.toArray(new String[toReturn.size()]);
     }
 
     public String[] getTableCreationCommand(Table t) {
@@ -126,12 +165,13 @@ public class PGSqlDialectHelper implements IDialectHelper {
             }
             sql += " ) ";
 
-            if(k.isOnDeleteCascade()) {
+            if (k.isOnDeleteCascade()) {
                 sql += " ON DELETE CASCADE ";
             }
-            if(k.isOnUpdateCascade()) {
+            if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
+            sql += ";";
 
             toReturn.add(sql);
         }
@@ -154,7 +194,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += ", ";
             }
         }
-        sql += " ) ";
+        sql += " ); ";
         toReturn.add(sql);
 
         return toReturn.toArray(new String[toReturn.size()]);
@@ -232,37 +272,108 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
             }
+            sql += ";";
             toReturn.add(sql);
         }
 
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public Map.Entry<String[], Object[]> getInsertCommand(Data d) {
-        String sql = "";
-        List<Object> values = new ArrayList<Object>();
+    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
-        sql += " INSERT INTO " + d.getTableName() + " (";
-        int i = 0;
-        for (String k : d.getData().keySet()) {
-            sql += k;
-            if (i < d.getData().keySet().size() - 1) {
-                sql += ", ";
-            }
-            i++;
-        }
-        sql += " ) VALUES (";
-        i = 0;
-        for (String k : d.getData().keySet()) {
-            sql += "?";
-            values.add(d.getData().get(k));
-            if (i < d.getData().keySet().size() - 1) {
-                sql += ", ";
-            }
-            i++;
-        }
-        sql += " ) ";
+        for (Map<String, Object> m : d.getData()) {
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
 
-        return new AbstractMap.SimpleEntry<String[], Object[]>(new String[]{sql}, values.toArray());
+            sql += " INSERT INTO " + d.getTableName() + " (";
+            int i = 0;
+            for (String k : m.keySet()) {
+                sql += k;
+                if (i < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                i++;
+            }
+            sql += " ) VALUES (";
+            i = 0;
+            for (String k : m.keySet()) {
+                sql += "?";
+                values.add(m.get(k));
+                if (i < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                i++;
+            }
+            sql += " ); ";
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
+    }
+
+    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
+        if (!d.isAllRows()) {
+            for (Map<String, Object> w : d.getWhere()) {
+                String sql = "";
+                List<Object> values = new ArrayList<Object>();
+
+                sql += " DELETE FROM " + d.getTableName() + " WHERE 1 = 1 ";
+                for (String k : w.keySet()) {
+                    sql += " AND " + k + " = ? ";
+                    values.add(w.get(k));
+                }
+                sql += ";";
+
+                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            }
+        } else {
+            String sql = "";
+
+            sql += " DELETE FROM " + d.getTableName() + ";";
+
+            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
+        }
+
+        return toReturn;
+    }
+
+    public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+
+        for (int i = 0; i < d.getData().size(); i++) {
+            Map<String, Object> m = d.getData().get(i);
+
+            String sql = "";
+            List<Object> values = new ArrayList<Object>();
+
+            sql += " UPDATE " + d.getTableName() + " SET ";
+            int j = 0;
+            for (String k : m.keySet()) {
+                sql += k + " = ? ";
+                values.add(m.get(k));
+                if (j < m.keySet().size() - 1) {
+                    sql += ", ";
+                }
+                j++;
+            }
+            if (!d.isAllRows()) {
+                sql += " WHERE 1 = 1 ";
+                for (Map<String, Object> w : d.getWhere()) {
+                    for (String k : w.keySet()) {
+                        sql += " AND " + k + " = ? ";
+                        values.add(w.get(k));
+                    }
+                }
+            }
+            sql += ";";
+
+            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+        }
+
+        return toReturn;
     }
 }

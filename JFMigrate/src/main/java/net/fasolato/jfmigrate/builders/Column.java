@@ -1,9 +1,14 @@
 package net.fasolato.jfmigrate.builders;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
+import net.fasolato.jfmigrate.internal.Pair;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.sql.JDBCType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by fasolato on 20/03/2017.
@@ -27,16 +32,79 @@ public class Column implements Change {
         this.operationType = operationType;
     }
 
-    public String[] getSqlCommand(IDialectHelper helper) {
+    public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
         switch (operationType) {
             case delete:
-                return helper.getColumnDropCommand(this);
+                for (String s : helper.getColumnDropCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
             case rename:
-                return helper.getColumnRenameCommand(this);
-            default:
-                return new String[]{};
+                for (String s : helper.getColumnRenameCommand(this)) {
+                    toReturn.add(new Pair<String, Object[]>(s, null));
+                }
+                break;
         }
+
+        return toReturn;
     }
+
+    /* Type definitions */
+    public Column asInteger() {
+        return asInteger(null);
+    }
+
+    public Column asInteger(Integer precision) {
+        setType(JDBCType.INTEGER);
+        setPrecision(precision);
+
+        return this;
+    }
+
+    public Column asString() {
+        return asString(null);
+    }
+
+    public Column asString(Integer precision) {
+        setType(JDBCType.VARCHAR);
+        setPrecision(precision);
+
+        return this;
+    }
+
+    public Column asDecimal() {
+        return asDecimal(null, null);
+    }
+
+    public Column asDecimal(Integer precision) {
+        return asDecimal(precision, null);
+    }
+
+    public Column asDecimal(Integer precision, Integer scale) {
+        setType(JDBCType.DECIMAL);
+        setPrecision(precision);
+        setScale(scale);
+
+        return this;
+    }
+
+    public Column as(JDBCType t) {
+        return as(t, null, null);
+    }
+
+    public Column as(JDBCType t, Integer precision) {
+        return as(t, precision, null);
+    }
+
+    public Column as(JDBCType t, Integer precision, Integer scale) {
+        setType(t);
+        setPrecision(precision);
+        setScale(scale);
+
+        return this;
+    }
+    /* Type definitions */
 
     public String getName() {
         return name;
