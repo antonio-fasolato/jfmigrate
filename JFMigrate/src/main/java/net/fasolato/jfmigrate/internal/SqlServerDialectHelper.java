@@ -15,6 +15,20 @@ import java.util.Map;
 public class SqlServerDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
 
+    private String getQueryValueFromObject(Object o) {
+        if(o == null) {
+            return null;
+        }
+
+        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
+            return String.format("%s", o);
+        } else if(o instanceof String) {
+            return String.format("'%s'", o);
+        }
+
+        return String.format("'%s'", o);
+    }
+
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
@@ -115,76 +129,78 @@ public class SqlServerDialectHelper implements IDialectHelper {
     }
 
     public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
-        return null;
-//        List<String> toReturn = new ArrayList<String>();
-//        String sql = "";
-//
-//        sql += " CREATE TABLE ";
-//        sql += t.getName();
-//        sql += " ( ";
-//        int i = 0;
-//        for (Column c : t.getChanges()) {
-//            i++;
-//            if (c.getOperationType() == OperationType.create) {
-//                sql += c.getName() + " ";
-//                if (c.getType().equals(JDBCType.BOOLEAN)) {
-//                    sql += "BIT ";
-//                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-//                    sql += "DATETIME ";
-//                } else {
-//                    sql += c.getType() + " ";
-//                }
-//                if (c.getPrecision() != null) {
-//                    sql += "(" + c.getPrecision();
-//                    sql += c.getScale() != null ? "," + c.getScale() : "";
-//                    sql += ")";
-//                }
-//                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-//                sql += c.isUnique() ? " UNIQUE " : "";
-//                sql += c.isNullable() ? "" : " NOT NULL ";
-//                if (i < t.getChanges().size()) {
-//                    sql += ", ";
-//                }
-//            }
-//        }
-//        sql += " );";
-//        toReturn.add(sql);
-//
-//        for (ForeignKey k : t.getAddedForeignKeys()) {
-//            sql = "";
-//            sql += "ALTER TABLE " + k.getFromTable() + " ";
-//            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
-//            for (i = 0; i < k.getForeignColumns().size(); i++) {
-//                String c = k.getForeignColumns().get(i);
-//                sql += " " + c;
-//                if (i < k.getForeignColumns().size() - 1) {
-//                    sql += ", ";
-//                }
-//            }
-//            sql += " ) ";
-//            sql += "    REFERENCES " + k.getToTable() + " ( ";
-//            for (i = 0; i < k.getPrimaryKeys().size(); i++) {
-//                String c = k.getPrimaryKeys().get(i);
-//                sql += " " + c;
-//                if (i < k.getPrimaryKeys().size() - 1) {
-//                    sql += ", ";
-//                }
-//            }
-//            sql += " ) ";
-//
-//            if (k.isOnDeleteCascade()) {
-//                sql += " ON DELETE CASCADE ";
-//            }
-//            if (k.isOnUpdateCascade()) {
-//                sql += " ON UPDATE CASCADE ";
-//            }
-//
-//            sql += ";";
-//
-//            toReturn.add(sql);
-//        }
-//
-//        return toReturn.toArray(new String[toReturn.size()]);
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+        String sql = "";
+
+        sql += " CREATE TABLE ";
+        sql += t.getName();
+        sql += " ( ";
+        int i = 0;
+        for (Column c : t.getChanges()) {
+            i++;
+            if (c.getOperationType() == OperationType.create) {
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                }
+                if (i < t.getChanges().size()) {
+                    sql += ", ";
+                }
+            }
+        }
+        sql += " );";
+        toReturn.add(new Pair<>(sql, null));
+
+        for (ForeignKey k : t.getAddedForeignKeys()) {
+            sql = "";
+            sql += "ALTER TABLE " + k.getFromTable() + " ";
+            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
+            for (i = 0; i < k.getForeignColumns().size(); i++) {
+                String c = k.getForeignColumns().get(i);
+                sql += " " + c;
+                if (i < k.getForeignColumns().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += " ) ";
+            sql += "    REFERENCES " + k.getToTable() + " ( ";
+            for (i = 0; i < k.getPrimaryKeys().size(); i++) {
+                String c = k.getPrimaryKeys().get(i);
+                sql += " " + c;
+                if (i < k.getPrimaryKeys().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += " ) ";
+
+            if (k.isOnDeleteCascade()) {
+                sql += " ON DELETE CASCADE ";
+            }
+            if (k.isOnUpdateCascade()) {
+                sql += " ON UPDATE CASCADE ";
+            }
+
+            sql += ";";
+
+            toReturn.add(new Pair<>(sql, null));
+        }
+
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -251,59 +267,62 @@ public class SqlServerDialectHelper implements IDialectHelper {
     }
 
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
-        return null;
-//        List<String> toReturn = new ArrayList<String>();
-//
-//        for (Column c : t.getChanges()) {
-//            String sql = "";
-//            if (c.getOperationType() == OperationType.create) {
-//                sql += " ALTER TABLE ";
-//                sql += t.getName();
-//                sql += " ADD ";
-//                sql += c.getName() + " ";
-//                if (c.getType().equals(JDBCType.BOOLEAN)) {
-//                    sql += "BIT ";
-//                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-//                    sql += "DATETIME ";
-//                } else {
-//                    sql += c.getType() + " ";
-//                }
-//                if (c.getPrecision() != null) {
-//                    sql += "(" + c.getPrecision();
-//                    sql += c.getScale() != null ? "," + c.getScale() : "";
-//                    sql += ")";
-//                }
-//                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-//                sql += c.isUnique() ? " UNIQUE " : "";
-//                sql += c.isNullable() ? "" : " NOT NULL ";
-//            } else if (c.getOperationType() == OperationType.alter) {
-//                sql += " ALTER TABLE ";
-//                sql += t.getName();
-//                sql += " ALTER COLUMN ";
-//                sql += c.getName() + " ";
-//                if (c.getType().equals(JDBCType.BOOLEAN)) {
-//                    sql += "BIT ";
-//                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-//                    sql += "DATETIME ";
-//                } else {
-//                    sql += c.getType() + " ";
-//                }
-//                if (c.getPrecision() != null) {
-//                    sql += "(" + c.getPrecision();
-//                    sql += c.getScale() != null ? "," + c.getScale() : "";
-//                    sql += ")";
-//                }
-//                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-//                sql += c.isUnique() ? " UNIQUE " : "";
-//                sql += c.isNullable() ? "" : " NOT NULL ";
-//            }
-//
-//            sql += ";";
-//
-//            toReturn.add(sql);
-//        }
-//
-//        return toReturn.toArray(new String[toReturn.size()]);
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+
+        for (Column c : t.getChanges()) {
+            String sql = "";
+            if (c.getOperationType() == OperationType.create) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ADD ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            } else if (c.getOperationType() == OperationType.alter) {
+                sql += " ALTER TABLE ";
+                sql += t.getName();
+                sql += " ALTER COLUMN ";
+                sql += c.getName() + " ";
+                if (c.getType().equals(JDBCType.BOOLEAN)) {
+                    sql += "BIT ";
+                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                    sql += "DATETIME ";
+                } else {
+                    sql += c.getType() + " ";
+                }
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                sql += c.isUnique() ? " UNIQUE " : "";
+                sql += c.isNullable() ? "" : " NOT NULL ";
+            }
+
+            sql += ";";
+            toReturn.add(new Pair<>(sql, null));
+
+            if(c.isDefaultValueSet()) {
+                sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_def DEFAULT %s FOR %s;", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
+                toReturn.add(new Pair<>(sql, null));
+            }
+        }
+
+        return toReturn;
     }
 
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {
