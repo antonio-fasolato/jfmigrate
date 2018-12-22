@@ -149,8 +149,8 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
-                sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
