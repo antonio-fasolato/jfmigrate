@@ -6,7 +6,6 @@ import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by fasolato on 21/03/2017.
@@ -28,7 +27,7 @@ public interface IDialectHelper {
 
     String[] getScriptCheckMigrationDownVersionCommand();
 
-    String[] getTableCreationCommand(Table t);
+    List<Pair<String, Object[]>> getTableCreationCommand(Table t);
 
     String[] getIndexCreationCommand(Index i);
 
@@ -42,7 +41,7 @@ public interface IDialectHelper {
 
     String[] getColumnRenameCommand(Column c);
 
-    String[] getAlterTableCommand(Table t);
+    List<Pair<String, Object[]>> getAlterTableCommand(Table t);
 
     List<Pair<String, Object[]>> getInsertCommand(Data d);
 

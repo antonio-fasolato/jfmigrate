@@ -15,6 +15,20 @@ import java.util.Map;
 public class SqlServerDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
 
+    private String getQueryValueFromObject(Object o) {
+        if(o == null) {
+            return null;
+        }
+
+        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
+            return String.format("%s", o);
+        } else if(o instanceof String) {
+            return String.format("'%s'", o);
+        }
+
+        return String.format("'%s'", o);
+    }
+
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
@@ -114,8 +128,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
 
         sql += " CREATE TABLE ";
@@ -141,13 +155,16 @@ public class SqlServerDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
             }
         }
         sql += " );";
-        toReturn.add(sql);
+        toReturn.add(new Pair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -180,10 +197,10 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, null));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -249,8 +266,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
             String sql = "";
@@ -297,11 +314,15 @@ public class SqlServerDialectHelper implements IDialectHelper {
             }
 
             sql += ";";
+            toReturn.add(new Pair<>(sql, null));
 
-            toReturn.add(sql);
+            if(c.isDefaultValueSet()) {
+                sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_def DEFAULT %s FOR %s;", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
+                toReturn.add(new Pair<>(sql, null));
+            }
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {

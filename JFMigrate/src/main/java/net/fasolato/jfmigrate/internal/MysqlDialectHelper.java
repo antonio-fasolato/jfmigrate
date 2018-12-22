@@ -96,10 +96,10 @@ public class MysqlDialectHelper implements IDialectHelper {
         return new String[0];
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
         String sql = "";
         List<String> primaryKeys = new ArrayList<String>();
+        List<Object> defaultValues = new ArrayList<>();
 
         sql += " CREATE TABLE ";
         sql += t.getName();
@@ -126,6 +126,10 @@ public class MysqlDialectHelper implements IDialectHelper {
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += "DEFAULT ?";
+                    defaultValues.add(c.getDefaultValue());
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
@@ -176,9 +180,12 @@ public class MysqlDialectHelper implements IDialectHelper {
         }
 
         sql += " );";
-        toReturn.add(sql);
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+
+        toReturn.add(new Pair<>(sql, defaultValues.isEmpty() ? null : defaultValues.toArray()));
+
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -261,11 +268,12 @@ public class MysqlDialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
             String sql = "";
+            List<Object> values = new ArrayList<>();
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -286,6 +294,10 @@ public class MysqlDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT ? ";
+                    values.add(c.getDefaultValue());
+                }
             } else if (c.getOperationType() == OperationType.alter) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -306,14 +318,18 @@ public class MysqlDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT ? ";
+                    values.add(c.getDefaultValue());
+                }
             }
 
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {

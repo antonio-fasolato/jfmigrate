@@ -148,6 +148,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(true);
+        changes.get(changes.size() - 1).setNullableCahnged(true);
         return this;
     }
 
@@ -157,6 +158,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(false);
+        changes.get(changes.size() - 1).setNullableCahnged(true);
         return this;
     }
 
@@ -174,6 +176,7 @@ public class Table implements Change {
             throw new JFException("No column defined");
         }
 
+        changes.get(changes.size() - 1).setDefaultValueSet(true);
         changes.get(changes.size() - 1).setDefaultValue(val);
         return this;
     }
@@ -191,6 +194,7 @@ public class Table implements Change {
         Column c = changes.get(changes.size() - 1);
         c.setType(JDBCType.INTEGER);
         c.setPrecision(precision);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -207,6 +211,7 @@ public class Table implements Change {
         Column c = changes.get(changes.size() - 1);
         c.setType(JDBCType.VARCHAR);
         c.setPrecision(precision);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -228,6 +233,7 @@ public class Table implements Change {
         c.setType(JDBCType.DECIMAL);
         c.setPrecision(precision);
         c.setScale(scale);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -249,6 +255,7 @@ public class Table implements Change {
         c.setType(t);
         c.setPrecision(precision);
         c.setScale(scale);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -258,10 +265,7 @@ public class Table implements Change {
 
         switch (operationType) {
             case create:
-                for (String s : helper.getTableCreationCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
-                }
-                break;
+                return helper.getTableCreationCommand(this);
             case delete:
                 for (String s : helper.getTableDropCommand(this)) {
                     toReturn.add(new Pair<String, Object[]>(s, null));
@@ -273,10 +277,7 @@ public class Table implements Change {
                 }
                 break;
             case alter:
-                for (String s : helper.getAlterTableCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
-                }
-                break;
+                return helper.getAlterTableCommand(this);
         }
 
         return toReturn;

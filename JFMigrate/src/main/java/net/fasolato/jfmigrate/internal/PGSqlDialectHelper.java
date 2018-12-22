@@ -7,6 +7,20 @@ import java.util.List;
 import java.util.Map;
 
 public class PGSqlDialectHelper implements IDialectHelper {
+    private String getQueryValueFromObject(Object o) {
+        if(o == null) {
+            return null;
+        }
+
+        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
+            return String.format("%s", o);
+        } else if(o instanceof String) {
+            return String.format("'%s'", o);
+        }
+
+        return String.format("'%s'", o);
+    }
+
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
@@ -115,8 +129,8 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
 
         sql += " CREATE TABLE ";
@@ -135,13 +149,16 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                if(c.isDefaultValueSet()) {
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
             }
         }
         sql += " );";
-        toReturn.add(sql);
+        toReturn.add(new Pair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -173,10 +190,10 @@ public class PGSqlDialectHelper implements IDialectHelper {
             }
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, null));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -240,8 +257,8 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
             String sql = "";
@@ -258,25 +275,40 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
-            } else if (c.getOperationType() == OperationType.alter) {
-                sql += " ALTER TABLE ";
-                sql += t.getName();
-                sql += " ALTER COLUMN ";
-                sql += c.getName() + " TYPE " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                if(c.isDefaultValueSet()) {
+                    sql += " SET DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-                sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+            } else if (c.getOperationType() == OperationType.alter) {
+                if(c.isTypeChanged()) {
+                    sql = "";
+                    sql += " ALTER TABLE ";
+                    sql += t.getName();
+                    sql += " ALTER COLUMN ";
+                    sql += c.getName() + " TYPE " + c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
+                    sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                    sql += c.isUnique() ? " UNIQUE " : "";
+                    sql += ";";
+                    toReturn.add(new Pair<>(sql, null));
+                }
+
+                if(c.isNullableCahnged()) {
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+                    toReturn.add(new Pair<>(sql, null));
+                }
+
+                if(c.isDefaultValueSet()) {
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
+                    toReturn.add(new Pair<>(sql, null));
+                }
             }
-            sql += ";";
-            toReturn.add(sql);
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public List<Pair<String, Object[]>> getInsertCommand(Data d) {

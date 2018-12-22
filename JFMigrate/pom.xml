@@ -31,6 +31,10 @@
         <url>http://github.com/antonio-fasolato/jfmigrate</url>
     </scm>
 
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
