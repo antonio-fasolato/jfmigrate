@@ -20,10 +20,12 @@ public class Column implements Change {
     private OperationType operationType;
     private boolean primaryKey;
     private boolean unique;
+    private boolean nullableCahnged;
     private boolean nullable;
     private boolean identity;
     private boolean defaultValueSet;
     private Object defaultValue;
+    private boolean typeChanged;
     private JDBCType type;
     private Integer precision;
     private Integer scale;
@@ -59,6 +61,7 @@ public class Column implements Change {
     public Column asInteger(Integer precision) {
         setType(JDBCType.INTEGER);
         setPrecision(precision);
+        typeChanged = true;
 
         return this;
     }
@@ -70,6 +73,7 @@ public class Column implements Change {
     public Column asString(Integer precision) {
         setType(JDBCType.VARCHAR);
         setPrecision(precision);
+        typeChanged = true;
 
         return this;
     }
@@ -86,6 +90,7 @@ public class Column implements Change {
         setType(JDBCType.DECIMAL);
         setPrecision(precision);
         setScale(scale);
+        typeChanged = true;
 
         return this;
     }
@@ -102,6 +107,7 @@ public class Column implements Change {
         setType(t);
         setPrecision(precision);
         setScale(scale);
+        typeChanged = true;
 
         return this;
     }
@@ -205,5 +211,21 @@ public class Column implements Change {
 
     public void setDefaultValueSet(boolean defaultValueSet) {
         this.defaultValueSet = defaultValueSet;
+    }
+
+    public boolean isNullableCahnged() {
+        return nullableCahnged;
+    }
+
+    public void setNullableCahnged(boolean nullableCahnged) {
+        this.nullableCahnged = nullableCahnged;
+    }
+
+    public boolean isTypeChanged() {
+        return typeChanged;
+    }
+
+    public void setTypeChanged(boolean typeChanged) {
+        this.typeChanged = typeChanged;
     }
 }

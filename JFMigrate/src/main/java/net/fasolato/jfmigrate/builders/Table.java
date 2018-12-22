@@ -148,6 +148,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(true);
+        changes.get(changes.size() - 1).setNullableCahnged(true);
         return this;
     }
 
@@ -157,6 +158,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(false);
+        changes.get(changes.size() - 1).setNullableCahnged(true);
         return this;
     }
 
@@ -192,6 +194,7 @@ public class Table implements Change {
         Column c = changes.get(changes.size() - 1);
         c.setType(JDBCType.INTEGER);
         c.setPrecision(precision);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -208,6 +211,7 @@ public class Table implements Change {
         Column c = changes.get(changes.size() - 1);
         c.setType(JDBCType.VARCHAR);
         c.setPrecision(precision);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -229,6 +233,7 @@ public class Table implements Change {
         c.setType(JDBCType.DECIMAL);
         c.setPrecision(precision);
         c.setScale(scale);
+        c.setTypeChanged(true);
 
         return this;
     }
@@ -250,6 +255,7 @@ public class Table implements Change {
         c.setType(t);
         c.setPrecision(precision);
         c.setScale(scale);
+        c.setTypeChanged(true);
 
         return this;
     }
