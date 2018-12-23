@@ -10,7 +10,7 @@ import java.util.List;
 public class OracleDialectHelper implements IDialectHelper {
     @Override
     public String getDatabaseVersionTableExistenceCommand() {
-        return String.format(" SELECT * from %s WHERE ROWNUM = 1 ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
+        return String.format(" SELECT count(*) + 1 from %s ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }
 
     @Override
@@ -25,7 +25,7 @@ public class OracleDialectHelper implements IDialectHelper {
 
     @Override
     public String getVersionTableCreationCommand() {
-        return null;
+        return String.format(" CREATE TABLE %s (version INTEGER primary key, appliedat timestamp not null, migrationname VARCHAR2(255) not null) ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }
 
     @Override
