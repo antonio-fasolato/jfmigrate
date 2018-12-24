@@ -127,8 +127,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
-                    sql += "DEFAULT ?";
-                    defaultValues.add(c.getDefaultValue());
+                    if(c.getDefaultValue() instanceof DefaultFunction) {
+                        sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());
+                    } else {
+                        sql += "DEFAULT ?";
+                        defaultValues.add(c.getDefaultValue());
+                    }
                 }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
@@ -295,8 +299,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
-                    values.add(c.getDefaultValue());
+                    if(c.getDefaultValue() instanceof DefaultFunction) {
+                        sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());
+                    } else {
+                        sql += " DEFAULT ? ";
+                        values.add(c.getDefaultValue());
+                    }
                 }
             } else if (c.getOperationType() == OperationType.alter) {
                 sql += " ALTER TABLE ";
@@ -319,8 +327,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
-                    values.add(c.getDefaultValue());
+                    if(c.getDefaultValue() instanceof DefaultFunction) {
+                        sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());
+                    } else {
+                        sql += " DEFAULT ? ";
+                        values.add(c.getDefaultValue());
+                    }
                 }
             }
 
