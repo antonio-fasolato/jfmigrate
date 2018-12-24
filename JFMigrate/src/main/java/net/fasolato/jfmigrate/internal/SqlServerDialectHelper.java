@@ -12,22 +12,8 @@ import java.util.Map;
 /**
  * Created by fasolato on 21/03/2017.
  */
-public class SqlServerDialectHelper implements IDialectHelper {
+public class SqlServerDialectHelper extends GenericDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
-
-    private String getQueryValueFromObject(Object o) {
-        if(o == null) {
-            return null;
-        }
-
-        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
-            return String.format("%s", o);
-        } else if(o instanceof String) {
-            return String.format("'%s'", o);
-        }
-
-        return String.format("'%s'", o);
-    }
 
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
@@ -325,73 +311,14 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return toReturn;
     }
 
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-        }
-
-        return toReturn;
-    }
-
-    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        if (!d.isAllRows()) {
-            for (Map<String, Object> w : d.getWhere()) {
-                String sql = "";
-                List<Object> values = new ArrayList<Object>();
-
-                sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
-                }
-                sql += ";";
-
-                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-            }
-        } else {
-            String sql = " DELETE " + d.getTableName() + "; ";
-            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
-        }
-
-        return toReturn;
-    }
-
     public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (int i = 0; i < d.getData().size(); i++) {
             Map<String, Object> m = d.getData().get(i);
 
             String sql = "";
-            List<Object> values = new ArrayList<Object>();
+            List<Object> values = new ArrayList<>();
 
             sql += " UPDATE " + d.getTableName() + " SET ";
             int j = 0;
@@ -415,7 +342,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
             sql += ";";
 
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            toReturn.add(new Pair<>(sql, values.toArray()));
         }
 
         return toReturn;
