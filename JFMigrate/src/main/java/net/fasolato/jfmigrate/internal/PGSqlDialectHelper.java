@@ -278,6 +278,7 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 if(c.isDefaultValueSet()) {
                     sql += " SET DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
+                toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if(c.isTypeChanged()) {
                     sql = "";
