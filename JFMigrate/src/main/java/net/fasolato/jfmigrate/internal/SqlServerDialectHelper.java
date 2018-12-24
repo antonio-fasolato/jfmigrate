@@ -12,22 +12,8 @@ import java.util.Map;
 /**
  * Created by fasolato on 21/03/2017.
  */
-public class SqlServerDialectHelper implements IDialectHelper {
+public class SqlServerDialectHelper extends GenericDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
-
-    private String getQueryValueFromObject(Object o) {
-        if(o == null) {
-            return null;
-        }
-
-        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
-            return String.format("%s", o);
-        } else if(o instanceof String) {
-            return String.format("'%s'", o);
-        }
-
-        return String.format("'%s'", o);
-    }
 
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MysqlDialectHelper implements IDialectHelper {
+public class MysqlDialectHelper extends GenericDialectHelper implements IDialectHelper {
 
     private String schema;
 

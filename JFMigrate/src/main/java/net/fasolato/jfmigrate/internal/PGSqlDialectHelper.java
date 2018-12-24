@@ -6,21 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class PGSqlDialectHelper implements IDialectHelper {
-    private String getQueryValueFromObject(Object o) {
-        if(o == null) {
-            return null;
-        }
-
-        if(o instanceof Integer || o instanceof Double || o instanceof Float) {
-            return String.format("%s", o);
-        } else if(o instanceof String) {
-            return String.format("'%s'", o);
-        }
-
-        return String.format("'%s'", o);
-    }
-
+public class PGSqlDialectHelper extends GenericDialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 

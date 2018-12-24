@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class H2DialectHelper implements IDialectHelper {
+public class H2DialectHelper extends GenericDialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
