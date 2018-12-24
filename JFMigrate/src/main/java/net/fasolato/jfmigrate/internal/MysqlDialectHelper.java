@@ -89,11 +89,11 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
     }
 
     public String[] getScriptCheckMigrationUpVersionCommand() {
-        return new String[0];
+        return null;
     }
 
     public String[] getScriptCheckMigrationDownVersionCommand() {
-        return new String[0];
+        return null;
     }
 
     public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
