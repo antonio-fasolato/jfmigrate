@@ -38,6 +38,8 @@ public class JFMigrate {
                 dialect = SqlDialect.PGSQL;
             } else if (configDialect.equalsIgnoreCase("mysql")) {
                 dialect = SqlDialect.MYSQL;
+            } else if (configDialect.equalsIgnoreCase("oracle")) {
+                dialect = SqlDialect.ORACLE;
             }
         } catch (IOException e) {
             log.error(e);
@@ -64,6 +66,8 @@ public class JFMigrate {
                 return new PGSqlDialectHelper();
             case MYSQL:
                 return new MysqlDialectHelper(schema);
+            case ORACLE:
+                return new OracleDialectHelper();
             default:
                 throw new NotImplementedException();
         }
@@ -71,15 +75,24 @@ public class JFMigrate {
 
     private long getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
+        boolean exists = true;
+        ResultSet rs;
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
-        ResultSet rs = st.executeQuery();
-        boolean exists = true;
-        if (!rs.next()) {
-            exists = false;
-        } else {
-            if (rs.getInt(1) == 0) {
+        try {
+            rs = st.executeQuery();
+            if (!rs.next()) {
                 exists = false;
+            } else {
+                if (rs.getInt(1) == 0) {
+                    exists = false;
+                }
+            }
+        } catch (SQLSyntaxErrorException oracleException) {
+            if(oracleException.getMessage().startsWith("ORA-00942:")) {
+                exists = false;
+            } else {
+                throw oracleException;
             }
         }
         if (!exists) {
