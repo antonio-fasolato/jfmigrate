@@ -260,40 +260,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         return toReturn;
     }
 
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-        }
-
-        return toReturn;
-    }
-
+    @Override
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 

@@ -298,68 +298,6 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return toReturn;
     }
 
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-        }
-
-        return toReturn;
-    }
-
-    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        if (!d.isAllRows()) {
-            for (Map<String, Object> w : d.getWhere()) {
-                String sql = "";
-                List<Object> values = new ArrayList<Object>();
-
-                sql += " DELETE FROM " + d.getTableName() + " WHERE 1 = 1 ";
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
-                }
-                sql += ";";
-
-                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-            }
-        } else {
-            String sql = "";
-
-            sql += " DELETE FROM " + d.getTableName() + ";";
-
-            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
-        }
-
-        return toReturn;
-    }
-
     public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 

@@ -4,11 +4,14 @@ import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public class OracleDialectHelper extends GenericDialectHelper implements IDialectHelper {
+    public OracleDialectHelper() {
+        querySeparator = "";
+    }
+
     @Override
     public String getDatabaseVersionTableExistenceCommand() {
         return String.format(" SELECT count(*) + 1 from %s ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
@@ -185,52 +188,6 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
 
         return toReturn;
 
-    }
-
-    @Override
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<>();
-            for(String k : m.keySet()) {
-                values.add(m.get(k));
-            }
-
-            sql += String.format(" INSERT INTO %s (%s) VALUES (%s)", d.getTableName(), String.join(",", m.keySet()), String.join(",", Collections.nCopies(m.keySet().size(), "?")));
-
-            toReturn.add(new Pair<>(sql, values.toArray()));
-        }
-
-        return toReturn;    }
-
-    @Override
-    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
-
-        if (!d.isAllRows()) {
-            for (Map<String, Object> w : d.getWhere()) {
-                String sql = "";
-                List<Object> values = new ArrayList<>();
-
-                sql += " DELETE FROM " + d.getTableName() + " WHERE 1 = 1 ";
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
-                }
-
-                toReturn.add(new Pair<>(sql, values.toArray()));
-            }
-        } else {
-            String sql = "";
-
-            sql += " DELETE FROM " + d.getTableName();
-
-            toReturn.add(new Pair<>(sql, new Object[0]));
-        }
-
-        return toReturn;
     }
 
     @Override
