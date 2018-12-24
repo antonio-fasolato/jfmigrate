@@ -89,7 +89,7 @@ public class JFMigrate {
                 }
             }
         } catch (SQLSyntaxErrorException oracleException) {
-            if(oracleException.getMessage().startsWith("ORA-00942:")) {
+            if (oracleException.getMessage().startsWith("ORA-00942:")) {
                 exists = false;
             } else {
                 throw oracleException;
@@ -175,11 +175,8 @@ public class JFMigrate {
                         log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
-                        Savepoint save = null;
                         String[] scriptVersionCheck = null;
-                        if (out == null) {
-                            save = conn.setSavepoint();
-                        } else {
+                        if (out != null) {
                             out.write(String.format("-- Migration %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
@@ -191,79 +188,68 @@ public class JFMigrate {
                             }
                         }
                         PreparedStatement st;
-                        try {
-                            for (Change c : m.migration.getChanges()) {
-                                if (Data.class.isAssignableFrom(c.getClass())) {
-                                    Data d = (Data) c;
+                        for (Change c : m.migration.getChanges()) {
+                            if (Data.class.isAssignableFrom(c.getClass())) {
+                                Data d = (Data) c;
 
-                                    for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
-                                        st = new LoggablePreparedStatement(conn, commands.getA());
+                                for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
+                                    st = new LoggablePreparedStatement(conn, commands.getA());
+                                    for (int iv = 0; iv < commands.getB().length; iv++) {
+                                        st.setObject(iv + 1, commands.getB()[iv]);
+                                    }
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
+                                    if (out == null) {
+                                        st.executeUpdate();
+                                    } else {
+                                        out.write(st.toString().trim());
+                                        out.write(System.lineSeparator());
+                                        out.write(System.lineSeparator());
+                                    }
+                                }
+                            } else {
+                                for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                    st = new LoggablePreparedStatement(conn, commands.getA());
+                                    if (commands.getB() != null) {
                                         for (int iv = 0; iv < commands.getB().length; iv++) {
                                             st.setObject(iv + 1, commands.getB()[iv]);
                                         }
-                                        log.info("Executing{}{}", System.lineSeparator(), st);
-                                        if (out == null) {
-                                            st.executeUpdate();
-                                        } else {
-                                            out.write(st.toString().trim());
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                        }
                                     }
-                                } else {
-                                    for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                        st = new LoggablePreparedStatement(conn, commands.getA());
-                                        if(commands.getB() != null) {
-                                            for (int iv = 0; iv < commands.getB().length; iv++) {
-                                                st.setObject(iv + 1, commands.getB()[iv]);
-                                            }
-                                        }
-                                        log.info("Executing{}{}", System.lineSeparator(), st);
-                                        if (out == null) {
-                                            st.executeUpdate();
-                                        } else {
-                                            out.write(st.toString().trim());
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                        }
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
+                                    if (out == null) {
+                                        st.executeUpdate();
+                                    } else {
+                                        out.write(st.toString().trim());
+                                        out.write(System.lineSeparator());
+                                        out.write(System.lineSeparator());
                                     }
                                 }
                             }
-
-                            String migrationVersionCommand = helper.getInsertNewVersionCommand();
-                            st = new LoggablePreparedStatement(conn, migrationVersionCommand);
-                            st.setLong(1, m.getMigrationNumber());
-                            st.setString(2, m.getMigrationName());
-                            log.info("Executing{}{}", System.lineSeparator(), st);
-                            if (out == null) {
-                                st.executeUpdate();
-                            } else {
-                                out.write(st.toString().trim());
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                            }
-
-                            if (out != null) {
-                                if (scriptVersionCheck != null) {
-                                    out.write(scriptVersionCheck[1]);
-                                    out.write(System.lineSeparator());
-                                }
-                                out.write("--------------------------------------------");
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                            }
-                            log.debug("Applied migration {}", m.getClass().getSimpleName());
-                        } catch (Exception e) {
-                            if (conn != null && save != null) {
-                                try {
-                                    conn.rollback(save);
-                                } catch (Exception ex) {
-                                    log.error("Error rolling back", ex);
-                                }
-                            }
-                            throw e;
                         }
+
+                        String migrationVersionCommand = helper.getInsertNewVersionCommand();
+                        st = new LoggablePreparedStatement(conn, migrationVersionCommand);
+                        st.setLong(1, m.getMigrationNumber());
+                        st.setString(2, m.getMigrationName());
+                        log.info("Executing{}{}", System.lineSeparator(), st);
+                        if (out == null) {
+                            st.executeUpdate();
+                        } else {
+                            out.write(st.toString().trim());
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
+
+                        if (out != null) {
+                            if (scriptVersionCheck != null) {
+                                out.write(scriptVersionCheck[1]);
+                                out.write(System.lineSeparator());
+                            }
+                            out.write("--------------------------------------------");
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
+                        log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
                         if (m.getMigrationNumber() <= dbVersion) {
                             log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
@@ -338,11 +324,8 @@ public class JFMigrate {
                         log.debug("Applying migration DOWN {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.down();
 
-                        Savepoint save = null;
                         String[] scriptVersionCheck = null;
-                        if (out == null) {
-                            save = conn.setSavepoint();
-                        } else {
+                        if (out != null) {
                             out.write(String.format("-- Migration down %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
@@ -355,79 +338,72 @@ public class JFMigrate {
                         }
 
                         PreparedStatement st;
-                        try {
-                            if (out == null) {
-                                String testVersionSql = helper.getSearchDatabaseVersionCommand();
-                                st = new LoggablePreparedStatement(conn, testVersionSql);
-                                st.setLong(1, m.getMigrationNumber());
-                                log.info("Executing{}{}", System.lineSeparator(), st);
-                                ResultSet rs = st.executeQuery();
-                                if (!rs.next()) {
-                                    throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
-                                }
+                        if (out == null) {
+                            String testVersionSql = helper.getSearchDatabaseVersionCommand();
+                            st = new LoggablePreparedStatement(conn, testVersionSql);
+                            st.setLong(1, m.getMigrationNumber());
+                            log.info("Executing{}{}", System.lineSeparator(), st);
+                            ResultSet rs = st.executeQuery();
+                            if (!rs.next()) {
+                                throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
                             }
+                        }
 
-                            for (Change c : m.migration.getChanges()) {
-                                for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                    if (Data.class.isAssignableFrom(c.getClass())) {
-                                        st = new LoggablePreparedStatement(conn, commands.getA());
-                                        if(commands.getB() != null) {
-                                            for (int i = 0; i < commands.getB().length; i++) {
-                                                st.setObject(i + 1, commands.getB()[i]);
-                                            }
+                        for (Change c : m.migration.getChanges()) {
+                            for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                if (Data.class.isAssignableFrom(c.getClass())) {
+                                    st = new LoggablePreparedStatement(conn, commands.getA());
+                                    if (commands.getB() != null) {
+                                        for (int i = 0; i < commands.getB().length; i++) {
+                                            st.setObject(i + 1, commands.getB()[i]);
                                         }
-                                        log.info("Executing{}{}", System.lineSeparator(), st);
-                                        if (out == null) {
-                                            st.executeUpdate();
-                                        } else {
-                                            out.write(st.toString().trim());
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                        }
+                                    }
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
+                                    if (out == null) {
+                                        st.executeUpdate();
                                     } else {
-                                        st = new LoggablePreparedStatement(conn, commands.getA());
-                                        log.info("Executing{}{}", System.lineSeparator(), st);
-                                        if (out == null) {
-                                            st.executeUpdate();
-                                        } else {
-                                            out.write(st.toString().trim());
-                                            out.write(System.lineSeparator());
-                                            out.write(System.lineSeparator());
-                                        }
+                                        out.write(st.toString().trim());
+                                        out.write(System.lineSeparator());
+                                        out.write(System.lineSeparator());
+                                    }
+                                } else {
+                                    st = new LoggablePreparedStatement(conn, commands.getA());
+                                    log.info("Executing{}{}", System.lineSeparator(), st);
+                                    if (out == null) {
+                                        st.executeUpdate();
+                                    } else {
+                                        out.write(st.toString().trim());
+                                        out.write(System.lineSeparator());
+                                        out.write(System.lineSeparator());
                                     }
                                 }
                             }
-
-                            String migrationVersionCommand = helper.getDeleteVersionCommand();
-                            st = new LoggablePreparedStatement(conn, migrationVersionCommand);
-                            st.setLong(1, m.getMigrationNumber());
-                            log.info("Executing{}{}", System.lineSeparator(), st);
-                            if (out == null) {
-                                st.executeUpdate();
-                            } else {
-                                out.write(st.toString().trim());
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                            }
-
-                            if (out != null) {
-                                if (scriptVersionCheck != null) {
-                                    out.write(scriptVersionCheck[1]);
-                                    out.write(System.lineSeparator());
-                                }
-                                out.write("--------------------------------------------");
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                                out.write(System.lineSeparator());
-                            }
-
-                            log.debug("Applied migration {}", m.getClass().getSimpleName());
-                        } catch (Exception e) {
-                            if (out == null) {
-                                conn.rollback(save);
-                            }
-                            throw e;
                         }
+
+                        String migrationVersionCommand = helper.getDeleteVersionCommand();
+                        st = new LoggablePreparedStatement(conn, migrationVersionCommand);
+                        st.setLong(1, m.getMigrationNumber());
+                        log.info("Executing{}{}", System.lineSeparator(), st);
+                        if (out == null) {
+                            st.executeUpdate();
+                        } else {
+                            out.write(st.toString().trim());
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
+
+                        if (out != null) {
+                            if (scriptVersionCheck != null) {
+                                out.write(scriptVersionCheck[1]);
+                                out.write(System.lineSeparator());
+                            }
+                            out.write("--------------------------------------------");
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                            out.write(System.lineSeparator());
+                        }
+
+                        log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
                         if (m.getMigrationNumber() > dbVersion) {
                             log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
