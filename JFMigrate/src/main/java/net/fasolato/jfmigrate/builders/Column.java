@@ -32,6 +32,7 @@ public class Column implements Change {
     private boolean autoIncrementChanged;
     private boolean autoIncrement;
     private long autoIncrementStartWith;
+    private int autoIncrementStep;
 
     public Column(String name, OperationType operationType) {
         this.name = name;
@@ -115,11 +116,12 @@ public class Column implements Change {
         return this;
     }
 
-    public Column autoIncrement(long startWith) {
+    public Column autoIncrement(long startWith, int step) {
         autoIncrement = true;
         typeChanged = true;
         autoIncrementChanged = true;
         autoIncrementStartWith = startWith;
+        autoIncrementStep = step;
         return this;
     }
     /* Type definitions */
@@ -262,5 +264,13 @@ public class Column implements Change {
 
     public void setAutoIncrementStartWith(long autoIncrementStartWith) {
         this.autoIncrementStartWith = autoIncrementStartWith;
+    }
+
+    public int getAutoIncrementStep() {
+        return autoIncrementStep;
+    }
+
+    public void setAutoIncrementStep(int autoIncrementStep) {
+        this.autoIncrementStep = autoIncrementStep;
     }
 }

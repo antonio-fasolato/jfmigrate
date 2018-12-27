@@ -261,16 +261,16 @@ public class Table implements Change {
     }
 
     public Table autoIncrement() {
-        return autoIncrement(1);
+        return autoIncrement(1, 1);
     }
 
-    public Table autoIncrement(long startWith) {
+    public Table autoIncrement(long startWith, int step) {
         if (changes.isEmpty()) {
             throw new JFException("No column defined");
         }
 
         Column c = changes.get(changes.size() - 1);
-        c.autoIncrement(startWith);
+        c.autoIncrement(startWith, step);
 
         return this;
     }
