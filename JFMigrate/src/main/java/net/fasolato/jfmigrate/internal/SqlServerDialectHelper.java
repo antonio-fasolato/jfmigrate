@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -126,6 +127,10 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
+                if(c.isAutoIncrement() && c.getType() == null) {
+                    c.setType(JDBCType.INTEGER);
+                    c.setTypeChanged(true);
+                }
                 if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
                 } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
@@ -137,6 +142,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += String.format(" IDENTITY(%s, %s) ", c.getAutoIncrementStartWith(), c.getAutoIncrementStep());
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -256,6 +264,11 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrement() && c.getType() == null) {
+                c.setType(JDBCType.INTEGER);
+                c.setTypeChanged(true);
+            }
+
             String sql = "";
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
@@ -273,6 +286,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += String.format(" IDENTITY(%s, %s) ", c.getAutoIncrementStartWith(), c.getAutoIncrementStep());
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -293,6 +309,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    throw new JFException("SQLServer does not permit to alter a column adding am identity to it.");
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";

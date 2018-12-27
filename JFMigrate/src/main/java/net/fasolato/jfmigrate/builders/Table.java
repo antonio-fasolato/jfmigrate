@@ -260,6 +260,21 @@ public class Table implements Change {
         return this;
     }
 
+    public Table autoIncrement() {
+        return autoIncrement(1, 1);
+    }
+
+    public Table autoIncrement(long startWith, int step) {
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+
+        Column c = changes.get(changes.size() - 1);
+        c.autoIncrement(startWith, step);
+
+        return this;
+    }
+
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 
