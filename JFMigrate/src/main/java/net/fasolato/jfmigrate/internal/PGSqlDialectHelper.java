@@ -139,10 +139,14 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
                     String preSql;
                     if(c.getAutoIncrementStartWith() == 1) {
-                        preSql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                        preSql = String.format(" CREATE SEQUENCE %s ", sequenceName);
                     } else {
-                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
                     }
+                    if(c.getAutoIncrementStep() != 1) {
+                        preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    preSql += ";";
                     toReturn.add(new Pair<>(preSql, null));
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
@@ -272,10 +276,14 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
                     String preSql;
                     if(c.getAutoIncrementStartWith() == 1) {
-                        preSql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                        preSql = String.format(" CREATE SEQUENCE %s ", sequenceName);
                     } else {
-                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
                     }
+                    if(c.getAutoIncrementStep() != 1) {
+                        preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    preSql += ";";
                     toReturn.add(new Pair<>(preSql, null));
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
@@ -298,10 +306,14 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
                     String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
                     if(c.getAutoIncrementStartWith() == 1) {
-                        sql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                        sql = String.format(" CREATE SEQUENCE %s ", sequenceName);
                     } else {
-                        sql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                        sql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
                     }
+                    if(c.getAutoIncrementStep() != 1) {
+                        sql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    sql += ";";
                     toReturn.add(new Pair<>(sql, null));
 
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s'); ", t.getName(), c.getName(), sequenceName);
