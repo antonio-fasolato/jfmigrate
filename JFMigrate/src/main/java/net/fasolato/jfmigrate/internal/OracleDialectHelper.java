@@ -2,12 +2,16 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class OracleDialectHelper extends GenericDialectHelper implements IDialectHelper {
+    private static Logger log = LogManager.getLogger(OracleDialectHelper.class);
+
     public OracleDialectHelper() {
         querySeparator = "";
     }
@@ -62,6 +66,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
         sql += String.format(" CREATE TABLE %s ( ", t.getName());
         int i = 0;
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrement()) {
+                log.warn("Oracle does not support directly an autoincrement column (not in alla versions). You should manage this manually (sequence or trigger)");
+            }
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += String.format("%s %s ", c.getName(), c.getType());
@@ -146,6 +153,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
         for (Column c : t.getChanges()) {
             String sql = "";
             if (c.getOperationType() == OperationType.create) {
+                if(c.isAutoIncrement()) {
+                    log.warn("Oracle does not support directly an autoincrement column (not in alla versions). You should manage this manually (sequence or trigger)");
+                }
                 sql += String.format("ALTER TABLE %s ADD %s %s ", t.getName(), c.getName(), c.getType());
                 if (c.getPrecision() != null) {
                     sql += String.format(" (%s%s) ", c.getPrecision(), c.getScale() != null ? "," + c.getScale() : "");
