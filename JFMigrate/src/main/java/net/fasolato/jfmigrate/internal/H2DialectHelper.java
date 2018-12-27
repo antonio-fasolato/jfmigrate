@@ -2,6 +2,7 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         String sql = "";
         List<Object> values = new ArrayList<>();
 
+        String postSql = null;
         sql += " CREATE TABLE ";
         sql += t.getName();
         sql += " ( ";
@@ -94,11 +96,21 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
+                if(c.isAutoIncrementChanged() && c.getType() == null) {
+                    c.setTypeChanged(true);
+                    c.setType(JDBCType.INTEGER);
+                }
                 sql += c.getName() + " " + c.getType() + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -114,6 +126,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         }
         sql += " );";
         toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+        if(postSql != null) {
+            toReturn.add(new Pair<>(postSql, null));
+        }
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -216,7 +231,12 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrementChanged() && c.getType() == null) {
+                c.setTypeChanged(true);
+                c.setType(JDBCType.INTEGER);
+            }
             String sql = "";
+            String postSql = null;
             List<Object> values = new ArrayList<>();
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
@@ -227,6 +247,12 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -245,6 +271,12 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
@@ -255,6 +287,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
             }
             sql += ";";
             toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+            if(postSql != null) {
+                toReturn.add(new Pair<>(postSql, null));
+            }
         }
 
         return toReturn;
