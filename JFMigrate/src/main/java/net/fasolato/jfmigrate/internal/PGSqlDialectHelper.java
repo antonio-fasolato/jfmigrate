@@ -1,6 +1,7 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,16 +127,30 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
-                sql += c.getName() + " " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                sql += c.getName() + " ";
+                if (!c.isAutoIncrement()) {
+                    sql += c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
+                } else {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    String preSql;
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        preSql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                    } else {
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    toReturn.add(new Pair<>(preSql, null));
+
+                    sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
-                if(c.isDefaultValueSet()) {
+                if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
                 if (i < t.getChanges().size()) {
@@ -252,26 +267,52 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ADD COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                sql += c.getName() + " ";
+                if (c.isAutoIncrement()) {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    String preSql;
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        preSql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                    } else {
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    toReturn.add(new Pair<>(preSql, null));
+
+                    sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
+                } else {
+                    sql += c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
-                if(c.isDefaultValueSet()) {
+                if (c.isDefaultValueSet()) {
                     sql += " SET DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
                 toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
-                if(c.isTypeChanged()) {
+                if (c.isTypeChanged() && c.isAutoIncrement()) {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        sql = String.format(" CREATE SEQUENCE %s; ", sequenceName);
+                    } else {
+                        sql = String.format(" CREATE SEQUENCE %s START WITH %s; ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    toReturn.add(new Pair<>(sql, null));
+
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s'); ", t.getName(), c.getName(), sequenceName);
+                    toReturn.add(new Pair<>(sql, null));
+                } else if (c.isTypeChanged()) {
                     sql = "";
                     sql += " ALTER TABLE ";
                     sql += t.getName();
                     sql += " ALTER COLUMN ";
-                    sql += c.getName() + " TYPE " + c.getType() + " ";
+                    sql += c.getName() + " TYPE ";
+                    sql += c.getType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -283,12 +324,12 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     toReturn.add(new Pair<>(sql, null));
                 }
 
-                if(c.isNullableCahnged()) {
+                if (c.isNullableCahnged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
                     toReturn.add(new Pair<>(sql, null));
                 }
 
-                if(c.isDefaultValueSet()) {
+                if (c.isDefaultValueSet()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
                     toReturn.add(new Pair<>(sql, null));
                 }

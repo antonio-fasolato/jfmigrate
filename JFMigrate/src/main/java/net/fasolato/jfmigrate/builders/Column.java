@@ -29,6 +29,9 @@ public class Column implements Change {
     private JDBCType type;
     private Integer precision;
     private Integer scale;
+    private boolean autoIncrementChanged;
+    private boolean autoIncrement;
+    private long autoIncrementStartWith;
 
     public Column(String name, OperationType operationType) {
         this.name = name;
@@ -109,6 +112,14 @@ public class Column implements Change {
         setScale(scale);
         typeChanged = true;
 
+        return this;
+    }
+
+    public Column autoIncrement(long startWith) {
+        autoIncrement = true;
+        typeChanged = true;
+        autoIncrementChanged = true;
+        autoIncrementStartWith = startWith;
         return this;
     }
     /* Type definitions */
@@ -227,5 +238,29 @@ public class Column implements Change {
 
     public void setTypeChanged(boolean typeChanged) {
         this.typeChanged = typeChanged;
+    }
+
+    public boolean isAutoIncrement() {
+        return autoIncrement;
+    }
+
+    public void setAutoIncrement(boolean autoIncrement) {
+        this.autoIncrement = autoIncrement;
+    }
+
+    public boolean isAutoIncrementChanged() {
+        return autoIncrementChanged;
+    }
+
+    public void setAutoIncrementChanged(boolean autoIncrementChanged) {
+        this.autoIncrementChanged = autoIncrementChanged;
+    }
+
+    public long getAutoIncrementStartWith() {
+        return autoIncrementStartWith;
+    }
+
+    public void setAutoIncrementStartWith(long autoIncrementStartWith) {
+        this.autoIncrementStartWith = autoIncrementStartWith;
     }
 }
