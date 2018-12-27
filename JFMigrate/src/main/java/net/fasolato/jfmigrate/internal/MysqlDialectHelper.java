@@ -98,6 +98,7 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
 
     public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
         String sql = "";
+        String postSql = null;
         List<String> primaryKeys = new ArrayList<String>();
         List<Object> defaultValues = new ArrayList<>();
 
@@ -108,6 +109,10 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
+                if(c.isAutoIncrementChanged() && c.getType() == null) {
+                    c.setTypeChanged(true);
+                    c.setType(JDBCType.INTEGER);
+                }
                 sql += c.getName() + " ";
                 if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
@@ -123,6 +128,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 }
                 if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
                     throw new JFException("VARCHAR size is required in MySql");
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " AUTO_INCREMENT ";
+                    if(c.getAutoIncrementStartWith() != 1) {
+                        postSql = String.format(" ALTER TABLE %s AUTO_INCREMENT = %s", t.getName(), c.getAutoIncrementStartWith());
+                    }
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
@@ -188,6 +199,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         toReturn.add(new Pair<>(sql, defaultValues.isEmpty() ? null : defaultValues.toArray()));
+        if(postSql != null) {
+            toReturn.add(new Pair<>(postSql, null));
+        }
 
         return toReturn;
     }
@@ -276,7 +290,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrementChanged() && c.getType() == null) {
+                c.setTypeChanged(true);
+                c.setType(JDBCType.INTEGER);
+            }
             String sql = "";
+            String postSql = null;
             List<Object> values = new ArrayList<>();
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
@@ -294,6 +313,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " AUTO_INCREMENT ";
+                    if(c.getAutoIncrementStartWith() != 1) {
+                        postSql = String.format(" ALTER TABLE %s AUTO_INCREMENT = %s", t.getName(), c.getAutoIncrementStartWith());
+                    }
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -323,6 +348,12 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " AUTO_INCREMENT ";
+                    if(c.getAutoIncrementStartWith() != 1) {
+                        postSql = String.format(" ALTER TABLE %s AUTO_INCREMENT = %s", t.getName(), c.getAutoIncrementStartWith());
+                    }
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
@@ -339,6 +370,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
             sql += ";";
 
             toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+            if(postSql != null) {
+                toReturn.add(new Pair<>(postSql, null));
+            }
         }
 
         return toReturn;
