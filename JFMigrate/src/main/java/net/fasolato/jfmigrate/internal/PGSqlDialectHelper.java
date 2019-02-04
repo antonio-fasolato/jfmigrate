@@ -2,6 +2,7 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -124,6 +125,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         sql += t.getName();
         sql += " ( ";
         int i = 0;
+        List<String> pks = new ArrayList<>();
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
@@ -151,7 +153,6 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if (c.isDefaultValueSet()) {
@@ -160,7 +161,13 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
+                if(c.isPrimaryKey()) {
+                    pks.add(c.getName());
+                }
             }
+        }
+        if(!pks.isEmpty()) {
+            sql += String.format(" ,PRIMARY KEY(%s)", Strings.join(pks, ','));
         }
         sql += " );";
         toReturn.add(new Pair<>(sql, null));
