@@ -299,7 +299,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if (c.isDefaultValueSet()) {
-                    sql += " SET DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
                 toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
