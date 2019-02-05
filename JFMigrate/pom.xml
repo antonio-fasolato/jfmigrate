@@ -6,7 +6,7 @@
 
     <groupId>net.fasolato.jfmigrate</groupId>
     <artifactId>JFMigrate</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Java fluent database migration library</description>
@@ -21,7 +21,7 @@
         <developer>
             <name>Antonio Fasolato</name>
             <email>antonio@fasolato.net</email>
-            <organization>Fasolato.net</organization>
+            <organization>fasolato.net</organization>
             <organizationUrl>http://www.fasolato.net</organizationUrl>
         </developer>
     </developers>
