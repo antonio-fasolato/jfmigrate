@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +13,7 @@ import java.util.Map;
 /**
  * Created by fasolato on 21/03/2017.
  */
-public class SqlServerDialectHelper implements IDialectHelper {
+public class SqlServerDialectHelper extends GenericDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(SqlServerDialectHelper.class);
 
     public String getDatabaseVersionTableExistenceCommand() {
@@ -114,8 +115,8 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
 
         sql += " CREATE TABLE ";
@@ -126,6 +127,10 @@ public class SqlServerDialectHelper implements IDialectHelper {
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
+                if(c.isAutoIncrement() && c.getType() == null) {
+                    c.setType(JDBCType.INTEGER);
+                    c.setTypeChanged(true);
+                }
                 if (c.getType().equals(JDBCType.BOOLEAN)) {
                     sql += "BIT ";
                 } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
@@ -138,16 +143,22 @@ public class SqlServerDialectHelper implements IDialectHelper {
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += String.format(" IDENTITY(%s, %s) ", c.getAutoIncrementStartWith(), c.getAutoIncrementStep());
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
             }
         }
         sql += " );";
-        toReturn.add(sql);
+        toReturn.add(new Pair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -180,10 +191,10 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, null));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -249,10 +260,15 @@ public class SqlServerDialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrement() && c.getType() == null) {
+                c.setType(JDBCType.INTEGER);
+                c.setTypeChanged(true);
+            }
+
             String sql = "";
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
@@ -270,6 +286,9 @@ public class SqlServerDialectHelper implements IDialectHelper {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
+                }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += String.format(" IDENTITY(%s, %s) ", c.getAutoIncrementStartWith(), c.getAutoIncrementStep());
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
@@ -291,86 +310,34 @@ public class SqlServerDialectHelper implements IDialectHelper {
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    throw new JFException("SQLServer does not permit to alter a column adding am identity to it.");
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
             }
 
             sql += ";";
+            toReturn.add(new Pair<>(sql, null));
 
-            toReturn.add(sql);
-        }
-
-        return toReturn.toArray(new String[toReturn.size()]);
-    }
-
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
+            if(c.isDefaultValueSet()) {
+                sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_def DEFAULT %s FOR %s;", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
+                toReturn.add(new Pair<>(sql, null));
             }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-        }
-
-        return toReturn;
-    }
-
-    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        if (!d.isAllRows()) {
-            for (Map<String, Object> w : d.getWhere()) {
-                String sql = "";
-                List<Object> values = new ArrayList<Object>();
-
-                sql += " DELETE " + d.getTableName() + " WHERE 1 = 1 ";
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
-                }
-                sql += ";";
-
-                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-            }
-        } else {
-            String sql = " DELETE " + d.getTableName() + "; ";
-            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
 
         return toReturn;
     }
 
     public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (int i = 0; i < d.getData().size(); i++) {
             Map<String, Object> m = d.getData().get(i);
 
             String sql = "";
-            List<Object> values = new ArrayList<Object>();
+            List<Object> values = new ArrayList<>();
 
             sql += " UPDATE " + d.getTableName() + " SET ";
             int j = 0;
@@ -394,7 +361,7 @@ public class SqlServerDialectHelper implements IDialectHelper {
 
             sql += ";";
 
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            toReturn.add(new Pair<>(sql, values.toArray()));
         }
 
         return toReturn;

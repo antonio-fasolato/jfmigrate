@@ -2,11 +2,12 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class H2DialectHelper implements IDialectHelper {
+public class H2DialectHelper extends GenericDialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
@@ -82,10 +83,12 @@ public class H2DialectHelper implements IDialectHelper {
         return new String[0];
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
+        List<Object> values = new ArrayList<>();
 
+        String postSql = null;
         sql += " CREATE TABLE ";
         sql += t.getName();
         sql += " ( ";
@@ -93,22 +96,39 @@ public class H2DialectHelper implements IDialectHelper {
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
+                if(c.isAutoIncrementChanged() && c.getType() == null) {
+                    c.setTypeChanged(true);
+                    c.setType(JDBCType.INTEGER);
+                }
                 sql += c.getName() + " " + c.getType() + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT ? ";
+                    values.add(c.getDefaultValue());
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
             }
         }
         sql += " );";
-        toReturn.add(sql);
+        toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+        if(postSql != null) {
+            toReturn.add(new Pair<>(postSql, null));
+        }
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -140,10 +160,10 @@ public class H2DialectHelper implements IDialectHelper {
             }
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, null));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -207,11 +227,17 @@ public class H2DialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            if(c.isAutoIncrementChanged() && c.getType() == null) {
+                c.setTypeChanged(true);
+                c.setType(JDBCType.INTEGER);
+            }
             String sql = "";
+            String postSql = null;
+            List<Object> values = new ArrayList<>();
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -222,9 +248,19 @@ public class H2DialectHelper implements IDialectHelper {
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT ? ";
+                    values.add(c.getDefaultValue());
+                }
             } else if (c.getOperationType() == OperationType.alter) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -235,51 +271,31 @@ public class H2DialectHelper implements IDialectHelper {
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
+                if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
+                    sql += " auto_increment ";
+                    if(c.getAutoIncrementStartWith() != 1 || c.getAutoIncrementStep() != 1) {
+                        postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
+                    }
+                }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isDefaultValueSet()) {
+                    sql += " DEFAULT ? ";
+                    values.add(c.getDefaultValue());
+                }
             }
             sql += ";";
-            toReturn.add(sql);
-        }
-
-        return toReturn.toArray(new String[toReturn.size()]);
-    }
-
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.size() - 1) {
-                    sql += ", ";
-                }
-                i++;
+            toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+            if(postSql != null) {
+                toReturn.add(new Pair<>(postSql, null));
             }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                i++;
-            }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }
 
         return toReturn;
     }
 
+    @Override
     public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 

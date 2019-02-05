@@ -7,5 +7,6 @@ public enum SqlDialect {
     SQL_SERVER,
     H2,
     PGSQL,
-    MYSQL
+    MYSQL,
+    ORACLE
 }

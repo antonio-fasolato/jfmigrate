@@ -6,7 +6,7 @@
 
     <groupId>net.fasolato.jfmigrate</groupId>
     <artifactId>JFMigrate</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Java fluent database migration library</description>
@@ -21,7 +21,7 @@
         <developer>
             <name>Antonio Fasolato</name>
             <email>antonio@fasolato.net</email>
-            <organization>Fasolato.net</organization>
+            <organization>fasolato.net</organization>
             <organizationUrl>http://www.fasolato.net</organizationUrl>
         </developer>
     </developers>
@@ -31,6 +31,10 @@
         <url>http://github.com/antonio-fasolato/jfmigrate</url>
     </scm>
 
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -47,6 +51,13 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
         </dependency>
     </dependencies>
 

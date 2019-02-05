@@ -1,12 +1,14 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class PGSqlDialectHelper implements IDialectHelper {
+public class PGSqlDialectHelper extends GenericDialectHelper implements IDialectHelper {
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
@@ -115,33 +117,60 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
-    public String[] getTableCreationCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
 
         sql += " CREATE TABLE ";
         sql += t.getName();
         sql += " ( ";
         int i = 0;
+        List<String> pks = new ArrayList<>();
         for (Column c : t.getChanges()) {
             i++;
             if (c.getOperationType() == OperationType.create) {
-                sql += c.getName() + " " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                sql += c.getName() + " ";
+                if (!c.isAutoIncrement()) {
+                    sql += c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
+                } else {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    String preSql;
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        preSql = String.format(" CREATE SEQUENCE %s ", sequenceName);
+                    } else {
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    if(c.getAutoIncrementStep() != 1) {
+                        preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    preSql += ";";
+                    toReturn.add(new Pair<>(preSql, null));
+
+                    sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if (c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
+                if(c.isPrimaryKey()) {
+                    pks.add(c.getName());
+                }
             }
         }
+        if(!pks.isEmpty()) {
+            sql += String.format(" ,PRIMARY KEY(%s)", Strings.join(pks, ','));
+        }
         sql += " );";
-        toReturn.add(sql);
+        toReturn.add(new Pair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -173,10 +202,10 @@ public class PGSqlDialectHelper implements IDialectHelper {
             }
             sql += ";";
 
-            toReturn.add(sql);
+            toReturn.add(new Pair<>(sql, null));
         }
 
-        return toReturn.toArray(new String[toReturn.size()]);
+        return toReturn;
     }
 
     public String[] getIndexCreationCommand(Index i) {
@@ -240,8 +269,8 @@ public class PGSqlDialectHelper implements IDialectHelper {
         return new String[]{sql};
     }
 
-    public String[] getAlterTableCommand(Table t) {
-        List<String> toReturn = new ArrayList<String>();
+    public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
+        List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
             String sql = "";
@@ -249,93 +278,81 @@ public class PGSqlDialectHelper implements IDialectHelper {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ADD COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                sql += c.getName() + " ";
+                if (c.isAutoIncrement()) {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    String preSql;
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        preSql = String.format(" CREATE SEQUENCE %s ", sequenceName);
+                    } else {
+                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    if(c.getAutoIncrementStep() != 1) {
+                        preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    preSql += ";";
+                    toReturn.add(new Pair<>(preSql, null));
+
+                    sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
+                } else {
+                    sql += c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
+                if (c.isDefaultValueSet()) {
+                    sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
+                }
+                toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
-                sql += " ALTER TABLE ";
-                sql += t.getName();
-                sql += " ALTER COLUMN ";
-                sql += c.getName() + " TYPE " + c.getType() + " ";
-                if (c.getPrecision() != null) {
-                    sql += "(" + c.getPrecision();
-                    sql += c.getScale() != null ? "," + c.getScale() : "";
-                    sql += ")";
+                if (c.isTypeChanged() && c.isAutoIncrement()) {
+                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
+                    if(c.getAutoIncrementStartWith() == 1) {
+                        sql = String.format(" CREATE SEQUENCE %s ", sequenceName);
+                    } else {
+                        sql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
+                    }
+                    if(c.getAutoIncrementStep() != 1) {
+                        sql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
+                    }
+                    sql += ";";
+                    toReturn.add(new Pair<>(sql, null));
+
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s'); ", t.getName(), c.getName(), sequenceName);
+                    toReturn.add(new Pair<>(sql, null));
+                } else if (c.isTypeChanged()) {
+                    sql = "";
+                    sql += " ALTER TABLE ";
+                    sql += t.getName();
+                    sql += " ALTER COLUMN ";
+                    sql += c.getName() + " TYPE ";
+                    sql += c.getType() + " ";
+                    if (c.getPrecision() != null) {
+                        sql += "(" + c.getPrecision();
+                        sql += c.getScale() != null ? "," + c.getScale() : "";
+                        sql += ")";
+                    }
+                    sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                    sql += c.isUnique() ? " UNIQUE " : "";
+                    sql += ";";
+                    toReturn.add(new Pair<>(sql, null));
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
-                sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
-            }
-            sql += ";";
-            toReturn.add(sql);
-        }
 
-        return toReturn.toArray(new String[toReturn.size()]);
-    }
-
-    public List<Pair<String, Object[]>> getInsertCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (Map<String, Object> m : d.getData()) {
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " INSERT INTO " + d.getTableName() + " (";
-            int i = 0;
-            for (String k : m.keySet()) {
-                sql += k;
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
+                if (c.isNullableCahnged()) {
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+                    toReturn.add(new Pair<>(sql, null));
                 }
-                i++;
-            }
-            sql += " ) VALUES (";
-            i = 0;
-            for (String k : m.keySet()) {
-                sql += "?";
-                values.add(m.get(k));
-                if (i < m.keySet().size() - 1) {
-                    sql += ", ";
+
+                if (c.isDefaultValueSet()) {
+                    sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
+                    toReturn.add(new Pair<>(sql, null));
                 }
-                i++;
             }
-            sql += " ); ";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-        }
-
-        return toReturn;
-    }
-
-    public List<Pair<String, Object[]>> getDeleteCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        if (!d.isAllRows()) {
-            for (Map<String, Object> w : d.getWhere()) {
-                String sql = "";
-                List<Object> values = new ArrayList<Object>();
-
-                sql += " DELETE FROM " + d.getTableName() + " WHERE 1 = 1 ";
-                for (String k : w.keySet()) {
-                    sql += " AND " + k + " = ? ";
-                    values.add(w.get(k));
-                }
-                sql += ";";
-
-                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
-            }
-        } else {
-            String sql = "";
-
-            sql += " DELETE FROM " + d.getTableName() + ";";
-
-            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
         }
 
         return toReturn;
