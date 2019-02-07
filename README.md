@@ -11,18 +11,14 @@ The fluent interface is freely inspired by [FluentMigrator](https://github.com/f
 
 ## Features
 
-- Already implemented
-    - Database agnostic (for the supported databases)
-    - Pure Java with as little dependencies as possible
-- Work in progress (but implemented soon)
-    - Migrations are executed directly from Java or can be exported in a database specific script to be executed in production environment or given to a DBA
+- Database agnostic (for the supported databases)
+- Pure Java with as little dependencies as possible
+- Migrations are executed directly from Java or can be exported in a database specific script to be executed in production environment or given to a DBA
 
 ## Limitations and TODO
 
-- The library is **absolutely not production ready**. The project is still in the first stages of development. That said I am using JFMigrate at work in a series of real life projects, so the library will grow fast.
-- One of the first feature I will implement is the possibility to export a list of migrations as a SQL script, where possible with automatic database version checking
-- At the moment the library uses [org.reflections](https://code.google.com/archive/p/reflections/). The library is *HUGE* and I am using it only to scan a package by name for all its classes. It will disappear from the dependencies, but at the moment is extremely useful and it speeds up the development greatly, so for a while it will stay
-- At the moment I am adding Database engines compatibility as I need it (at the moment only SqlServer and H2), in the future more will be added in a more thorough way
+- The library is **absolutely not production ready**, but somewhat tested in real life applications. The project is still in the first stages of development.
+- At the moment I am adding Database engines compatibility as I need it, in the future more will be added in a more thorough way
 - testing the code is difficult. At the moment is unit-tested on a different package not added to the repository because frankly the code is quit a mess. In the future I will be more diligent and start adding test to the main project
 
 ## Build
@@ -31,17 +27,17 @@ JFMigrate uses Java 8 and Maven, so to build it you need to have installed in yo
 
 JFMigrate is managed by Maven, so to generate the jar file with the library you should follow these steps:
 - Download JFMigrate from git
-```text
-git clone https://github.com/antonio-fasolato/jfmigrate.git
-```
+    ```text
+    git clone https://github.com/antonio-fasolato/jfmigrate.git
+    ```
 - Change directory into jfmigrate/JFMigrate
-```text
-cd jfmigrate\JFMigrate
-```
+    ```text
+    cd jfmigrate\JFMigrate
+    ```
 - Build it
-```text
-mvn clean package
-```
+    ```text
+    mvn clean package
+    ```
 The jar file will be in the folder `target`
 
 ### Branches and tags
@@ -52,10 +48,11 @@ JFMigrate is developed using [git flow](http://nvie.com/posts/a-successful-git-b
 - anything under `feature/`: a current feature being implemented
 - tags: each release corresponds to a tag
 
+I am making an exception to this only to edit the documentation in this file, as it would be too cumbersome to prepare a release just to edit this readme.
 
-## Getting started
+## Documentation and getting started
 
-(soon)
+All technical documentation will be in the [project wiki](https://github.com/antonio-fasolato/jfmigrate/wiki)
 
 ## Help needed
 
@@ -63,7 +60,7 @@ There is a lot of things to do.
 
 The first thing the project is missing, and something I am *absolutely* incapable of doing by myself is a logo.
 
-If someone more artistically-inclined than me (my 4 year-old daughter already is...) is willing to help, open an issue with a proposition and I will check it as soon as possible.
+If someone more artistically-inclined than me (my 6 year-old daughter already is...) is willing to help, open an issue with a proposition and I will check it as soon as possible.
 
 ## Contributing
 
