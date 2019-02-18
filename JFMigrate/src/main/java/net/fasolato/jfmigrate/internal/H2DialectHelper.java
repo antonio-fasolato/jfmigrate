@@ -87,6 +87,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
         List<Object> values = new ArrayList<>();
+        List<String> primaryKeys = new ArrayList<>();
 
         String postSql = null;
         sql += " CREATE TABLE ";
@@ -112,7 +113,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                         postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
                     }
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
@@ -123,6 +126,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += ", ";
                 }
             }
+        }
+        if(!primaryKeys.isEmpty()) {
+            sql += String.format(" , PRIMARY KEY(%s)", String.join(",", primaryKeys));
         }
         sql += " );";
         toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
@@ -229,6 +235,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
 
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+        List<String> primaryKeys = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
             if(c.isAutoIncrementChanged() && c.getType() == null) {
@@ -254,7 +261,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                         postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
                     }
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
@@ -277,13 +286,18 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                         postSql = String.format(" ALTER TABLE %s ALTER COLUMN %s RESTART WITH %s ", t.getName(), c.getName(), c.getAutoIncrementStartWith());
                     }
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
                 }
+            }
+            if(!primaryKeys.isEmpty()) {
+                sql += String.format(" , PRIMARY KEY(%s)", String.join(",", primaryKeys));
             }
             sql += ";";
             toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
