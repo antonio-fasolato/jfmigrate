@@ -176,7 +176,7 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 }
             }
             sql += ") ";
-            sql += " REFERENCES " + k.getFromTable() + "( ";
+            sql += " REFERENCES " + k.getToTable() + "( ";
             for (i = 0; i < k.getPrimaryKeys().size(); i++) {
                 String c = k.getPrimaryKeys().get(i);
                 sql += " " + c;
