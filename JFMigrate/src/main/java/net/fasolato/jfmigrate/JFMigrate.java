@@ -28,7 +28,6 @@ public class JFMigrate {
         try {
             properties.load(stream);
             String configDialect = properties.getProperty("jfmigrate.db.dialect");
-
             dialect = SqlDialect.H2;
             if (configDialect.equalsIgnoreCase("h2")) {
                 dialect = SqlDialect.H2;
@@ -37,6 +36,7 @@ public class JFMigrate {
             } else if (configDialect.equalsIgnoreCase("pgsql")) {
                 dialect = SqlDialect.PGSQL;
             } else if (configDialect.equalsIgnoreCase("mysql")) {
+                schema = properties.getProperty("jfmigrate.db.schema");
                 dialect = SqlDialect.MYSQL;
             } else if (configDialect.equalsIgnoreCase("oracle")) {
                 dialect = SqlDialect.ORACLE;
