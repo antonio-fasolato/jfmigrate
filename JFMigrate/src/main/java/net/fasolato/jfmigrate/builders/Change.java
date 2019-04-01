@@ -6,7 +6,7 @@ import net.fasolato.jfmigrate.internal.Pair;
 import java.util.List;
 
 /**
- * Created by fasolato on 14/04/2017.
+ * Generic class to represent a DB change
  */
 public interface Change {
     List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper);

@@ -179,7 +179,7 @@ public class JFMigrationFluent {
     }
 
     /**
-     * Method to delete data from a table. The table name and where clause is specified in the rest of the fluent interface.
+     * Method to delete data from a table. The table name and where clause is specified in the rest of the fluent interface ({@link Data#where(List)} or {@link Data#allRows()}).
      * @return The Data object to continue the fluent chain
      */
     public Data delete() {
@@ -191,8 +191,8 @@ public class JFMigrationFluent {
 
     /**
      * Method to update data from a table.<br>
-     *
-     * @param data
+     * The method works in a similar way as the {@link #insert(List)} method, but a where clause must be added using the specific api ({@link Data#where(List)} or {@link Data#allRows()}).
+     * @param data The List of new fields values.
      * @return
      */
     public Data update(List<Map<String, Object>> data) {
