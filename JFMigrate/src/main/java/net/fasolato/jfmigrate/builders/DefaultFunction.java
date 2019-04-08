@@ -6,6 +6,10 @@ package net.fasolato.jfmigrate.builders;
 public class DefaultFunction {
     private String function;
 
+    /**
+     * Constructor
+     * @param function The SQL function to use in a CREATE/ALTER table/column operation. The syntax is database/specific
+     */
     public DefaultFunction(String function) {
         this.function = function;
     }
