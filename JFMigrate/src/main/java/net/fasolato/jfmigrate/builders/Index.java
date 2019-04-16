@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by fasolato on 04/04/2017.
+ * Class to express an index in an index creation operation
  */
 public class Index implements Change {
     private String name;
@@ -17,27 +17,51 @@ public class Index implements Change {
     private boolean unique;
     private OperationType operationType;
 
+    /**
+     * Contructor
+     * @param name The index name
+     * @param operationType The operation type (create/delete)
+     */
     public Index(String name, OperationType operationType) {
         this.name = name;
         this.operationType = operationType;
         columns = new ArrayList<String>();
     }
 
+    /**
+     * Method to add a column (from the target table) to the index
+     * @param columnName The column name
+     * @return The Index object for the fluent interface
+     */
     public Index withIndexedColumn(String columnName) {
         getColumns().add(columnName);
         return this;
     }
 
+    /**
+     * Function to set the index target table name.
+     * @param tableName The table name
+     * @return The Index object for the fluent interface
+     */
     public Index fromTable(String tableName) {
         this.tableName = tableName;
         return this;
     }
 
+    /**
+     * Sets the index as unique
+     * @return The Index object for the fluent interface
+     */
     public Index unique() {
         this.unique = true;
         return this;
     }
 
+    /**
+     * Internal method used in generating the SQL code to be executed
+     * @param helper The database dialect helper class
+     * @return The list of queries and optional data to execute
+     */
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
 

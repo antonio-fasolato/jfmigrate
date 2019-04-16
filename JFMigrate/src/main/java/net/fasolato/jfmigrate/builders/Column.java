@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by fasolato on 20/03/2017.
+ * Class to represent all the changes to a column (creation, update...)
  */
 public class Column implements Change {
     private String name;
@@ -34,11 +34,21 @@ public class Column implements Change {
     private long autoIncrementStartWith;
     private int autoIncrementStep;
 
+    /**
+     * Constructor
+     * @param name The column name
+     * @param operationType The operation we are performing
+     */
     public Column(String name, OperationType operationType) {
         this.name = name;
         this.operationType = operationType;
     }
 
+    /**
+     * Returns the dialct specific command to perform the operation on the column
+     * @param helper The database dialect helper class
+     * @return The list of queries (left side of the Pair) with their optional parameters (null if not needed). The parameters are object and passed as they are to jdbc setObject() method
+     */
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
         switch (operationType) {
@@ -58,10 +68,20 @@ public class Column implements Change {
     }
 
     /* Type definitions */
+
+    /**
+     * Helper method to set the column type to integer (no parameters)
+     * @return this object to continue the fluent inteface
+     */
     public Column asInteger() {
         return asInteger(null);
     }
 
+    /**
+     * Helper method to set the column type to integer (no parameters)
+     * @param precision The integer precision
+     * @return this object to continue the fluent inteface
+     */
     public Column asInteger(Integer precision) {
         setType(JDBCType.INTEGER);
         setPrecision(precision);
@@ -70,10 +90,19 @@ public class Column implements Change {
         return this;
     }
 
+    /**
+     * Helper method to set the column type to String (Varchar)
+     * @return this object to continue the fluent inteface
+     */
     public Column asString() {
         return asString(null);
     }
 
+    /**
+     * Helper method to set the column type to String (Varchar)
+     * @param precision The column size
+     * @return this object to continue the fluent inteface
+     */
     public Column asString(Integer precision) {
         setType(JDBCType.VARCHAR);
         setPrecision(precision);
@@ -82,14 +111,29 @@ public class Column implements Change {
         return this;
     }
 
+    /**
+     * Helper method to set the column type to Decimal (with default values). This method is wildly dependent on the specific database dialect
+     * @return this object to continue the fluent inteface
+     */
     public Column asDecimal() {
         return asDecimal(null, null);
     }
 
+    /**
+     * Helper method to set the column type to Decimal (with default values). This method is wildly dependent on the specific database dialect
+     * @param precision The decimal precision
+     * @return this object to continue the fluent inteface
+     */
     public Column asDecimal(Integer precision) {
         return asDecimal(precision, null);
     }
 
+    /**
+     * Helper method to set the column type to Decimal (with default values). This method is wildly dependent on the specific database dialect
+     * @param precision The decimal precision
+     * @param scale The decimal scale
+     * @return this object to continue the fluent inteface
+     */
     public Column asDecimal(Integer precision, Integer scale) {
         setType(JDBCType.DECIMAL);
         setPrecision(precision);
@@ -99,14 +143,32 @@ public class Column implements Change {
         return this;
     }
 
+    /**
+     * Sets the column type to a generic jdbc type
+     * @param t The column type
+     * @return this object to continue the fluent inteface
+     */
     public Column as(JDBCType t) {
         return as(t, null, null);
     }
 
+    /**
+     * Sets the column type to a generic jdbc type with a precision
+     * @param t The column type
+     * @param precision The column precision. This could lead to a wrong SQL code if the type does not support a precision
+     * @return this object to continue the fluent inteface
+     */
     public Column as(JDBCType t, Integer precision) {
         return as(t, precision, null);
     }
 
+    /**
+     * Sets the column type to a generic jdbc type with a precision
+     * @param t The column type
+     * @param precision The column precision. This could lead to a wrong SQL code if the type does not support a precision
+     * @param scale The column scale. This could lead to a wrong SQL code if the type does not support a precision
+     * @return this object to continue the fluent inteface
+     */
     public Column as(JDBCType t, Integer precision, Integer scale) {
         setType(t);
         setPrecision(precision);
@@ -116,6 +178,12 @@ public class Column implements Change {
         return this;
     }
 
+    /**
+     * Sets the column as an autoincrement. Pay attention that this feature is not available on alla database dialects.
+     * @param startWith Starting value of the sequence (if the dialect supports it)
+     * @param step Sequence increment (if the dialect supports it)
+     * @return
+     */
     public Column autoIncrement(long startWith, int step) {
         autoIncrement = true;
         typeChanged = true;

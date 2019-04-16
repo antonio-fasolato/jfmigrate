@@ -14,6 +14,9 @@ import java.io.Writer;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Main class to manage JFMigrate
+ */
 public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
 
@@ -21,6 +24,11 @@ public class JFMigrate {
     private SqlDialect dialect;
     private String schema;
 
+    /**
+     * Constructor that bootstraps JFMigrate.
+     *
+     * It basically reads a jfmigrate.properties file in the classpath and configures the library (database dialcet, connection string...)
+     */
     public JFMigrate() {
         Properties properties = new Properties();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -48,10 +56,18 @@ public class JFMigrate {
         packages = new ArrayList<String>();
     }
 
+    /**
+     * Registers a package by name as a source of migration classes
+     * @param pkg The package name
+     */
     public void registerPackage(String pkg) {
         packages.add(pkg);
     }
 
+    /**
+     * Registers a package from a class object as a source of migration classes.
+     * @param clazz The class belonging to the package to use as a source
+     */
     public void registerPackage(Class<?> clazz) {
         packages.add(clazz.getPackage().getName());
     }
@@ -122,18 +138,40 @@ public class JFMigrate {
 
     }
 
+    /**
+     * Method to start an UP migration running against a real database engine.
+     * @throws Exception
+     */
     public void migrateUp() throws Exception {
         migrateUp(-1, null, false);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param out The Writer to write the SQL code to
+     * @throws Exception
+     */
     public void migrateUp(Writer out) throws Exception {
         migrateUp(-1, out, false);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param out The Writer to write the SQL code to
+     * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
+     * @throws Exception
+     */
     public void migrateUp(Writer out, boolean createVersionInfoTable) throws Exception {
         migrateUp(-1, out, createVersionInfoTable);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param startMigrationNumber Force JFMigrate to start from this migration (the existence of this migration is tested anyway)
+     * @param out The Writer to write the SQL code to
+     * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
+     * @throws Exception
+     */
     public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
@@ -285,10 +323,21 @@ public class JFMigrate {
         }
     }
 
+    /**
+     * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     * @param targetMigration The migration number where to stop. The initial database state is migration 0.
+     * @throws Exception
+     */
     public void migrateDown(int targetMigration) throws Exception {
         migrateDown(targetMigration, null);
     }
 
+    /**
+     * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     * @param targetMigration The migration number where to stop. The initial database state is migration 0.
+     * @param out The Writer to write the SQL code to
+     * @throws Exception
+     */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
@@ -439,10 +488,18 @@ public class JFMigrate {
         }
     }
 
+    /**
+     * Retrieves the current schema, if set
+     * @return
+     */
     public String getSchema() {
         return schema;
     }
 
+    /**
+     * Sets the database schema to use (if applicable)
+     * @param schema
+     */
     public void setSchema(String schema) {
         this.schema = schema;
     }

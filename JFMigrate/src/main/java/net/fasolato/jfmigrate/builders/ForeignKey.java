@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by fasolato on 21/03/2017.
+ * Class to express a foreign key constraint in a CREATE/ALTER table command
  */
 public class ForeignKey implements Change {
     private String name;
@@ -19,12 +19,21 @@ public class ForeignKey implements Change {
     private boolean onDeleteCascade;
     private boolean onUpdateCascade;
 
+    /**
+     * Constructor
+     * @param name The foreign key name
+     */
     public ForeignKey(String name) {
         this.name = name;
         foreignColumns = new ArrayList<String>();
         primaryKeys = new ArrayList<String>();
     }
 
+    /**
+     * Internal method used in generating the SQL code to be executed
+     * @param helper The database dialect helper class
+     * @return The list of queries and optional data to execute
+     */
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         throw new NotImplementedException();
     }
