@@ -147,8 +147,7 @@ public class JFMigrate {
 
         PreparedStatement st = new LoggablePreparedStatement(conn, createCommand);
         log.info("Executing{}{}", System.lineSeparator(), st);
-        st.executeUpdate();
-
+        st.execute();
     }
 
     /**
@@ -250,7 +249,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -267,7 +266,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -283,7 +282,7 @@ public class JFMigrate {
                         st.setString(2, m.getMigrationName());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
@@ -424,7 +423,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -434,7 +433,7 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getA());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -449,7 +448,7 @@ public class JFMigrate {
                         st.setLong(1, m.getMigrationNumber());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
