@@ -96,7 +96,7 @@ public class JFMigrate {
     private long getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
         boolean exists = true;
-        ResultSet rs;
+        ResultSet rs = null;
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
         try {
@@ -114,6 +114,13 @@ public class JFMigrate {
             } else {
                 throw oracleException;
             }
+        } finally {
+            try {
+                rs.close();
+                st.close();
+            } catch(Exception ex) {
+                log.error("Error closing resultset/ststement", ex);
+            }
         }
         if (!exists) {
             createVersionTable(helper, conn);
@@ -130,6 +137,8 @@ public class JFMigrate {
         if (rs.next()) {
             dbVersion = rs.getLong(1);
         }
+        rs.close();
+        st.close();
         return dbVersion;
     }
 
@@ -400,6 +409,8 @@ public class JFMigrate {
                             if (!rs.next()) {
                                 throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
                             }
+                            rs.close();
+                            st.close();
                         }
 
                         for (Change c : m.migration.getChanges()) {
