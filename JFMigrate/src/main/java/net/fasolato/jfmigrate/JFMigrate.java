@@ -48,6 +48,8 @@ public class JFMigrate {
                 dialect = SqlDialect.MYSQL;
             } else if (configDialect.equalsIgnoreCase("oracle")) {
                 dialect = SqlDialect.ORACLE;
+            } else if (configDialect.equalsIgnoreCase("sqlite")) {
+                dialect = SqlDialect.SQLITE;
             }
         } catch (IOException e) {
             log.error(e);
@@ -84,6 +86,8 @@ public class JFMigrate {
                 return new MysqlDialectHelper(schema);
             case ORACLE:
                 return new OracleDialectHelper();
+            case SQLITE:
+                return new SqliteDialectHelper();
             default:
                 throw new NotImplementedException();
         }
