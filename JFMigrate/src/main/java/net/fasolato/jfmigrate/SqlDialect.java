@@ -23,5 +23,9 @@ public enum SqlDialect {
     /**
      * Oracle database
      */
-    ORACLE
+    ORACLE,
+    /**
+     * SqLite
+     */
+    SQLITE
 }

@@ -48,6 +48,8 @@ public class JFMigrate {
                 dialect = SqlDialect.MYSQL;
             } else if (configDialect.equalsIgnoreCase("oracle")) {
                 dialect = SqlDialect.ORACLE;
+            } else if (configDialect.equalsIgnoreCase("sqlite")) {
+                dialect = SqlDialect.SQLITE;
             }
         } catch (IOException e) {
             log.error(e);
@@ -84,6 +86,8 @@ public class JFMigrate {
                 return new MysqlDialectHelper(schema);
             case ORACLE:
                 return new OracleDialectHelper();
+            case SQLITE:
+                return new SqliteDialectHelper();
             default:
                 throw new NotImplementedException();
         }
@@ -92,7 +96,7 @@ public class JFMigrate {
     private long getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
         boolean exists = true;
-        ResultSet rs;
+        ResultSet rs = null;
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
         try {
@@ -110,6 +114,13 @@ public class JFMigrate {
             } else {
                 throw oracleException;
             }
+        } finally {
+            try {
+                rs.close();
+                st.close();
+            } catch(Exception ex) {
+                log.error("Error closing resultset/ststement", ex);
+            }
         }
         if (!exists) {
             createVersionTable(helper, conn);
@@ -126,6 +137,8 @@ public class JFMigrate {
         if (rs.next()) {
             dbVersion = rs.getLong(1);
         }
+        rs.close();
+        st.close();
         return dbVersion;
     }
 
@@ -134,8 +147,7 @@ public class JFMigrate {
 
         PreparedStatement st = new LoggablePreparedStatement(conn, createCommand);
         log.info("Executing{}{}", System.lineSeparator(), st);
-        st.executeUpdate();
-
+        st.execute();
     }
 
     /**
@@ -237,7 +249,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -254,7 +266,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -270,7 +282,7 @@ public class JFMigrate {
                         st.setString(2, m.getMigrationName());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
@@ -396,6 +408,8 @@ public class JFMigrate {
                             if (!rs.next()) {
                                 throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
                             }
+                            rs.close();
+                            st.close();
                         }
 
                         for (Change c : m.migration.getChanges()) {
@@ -409,7 +423,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -419,7 +433,7 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getA());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -434,7 +448,7 @@ public class JFMigrate {
                         st.setLong(1, m.getMigrationNumber());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
