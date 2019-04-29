@@ -1,5 +1,6 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -196,18 +197,14 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
     public String[] getIndexDropCommand(Index i) {
         String sql = "";
 
-        sql += " DROP INDEX " + i.getName() + " ;";
+        sql += String.format(" DROP INDEX %s ;", i.getName());
 
         return new String[]{sql};
     }
 
     @Override
     public String[] getColumnDropCommand(Column c) {
-        String sql = "";
-
-        sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
-
-        return new String[]{sql};
+        throw new JFException("Sqlite does not support DROP COLUMN");
     }
 
     @Override
@@ -268,6 +265,11 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
+
+                if(!t.getAddedForeignKeys().isEmpty()) {
+                    throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
+                }
+
                 toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
