@@ -259,7 +259,9 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                         sql += ")";
                     }
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    throw new JFException("Sqlite does not support adding a primary key column");
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if (c.isDefaultValueSet()) {
@@ -299,9 +301,16 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                         sql += c.getScale() != null ? "," + c.getScale() : "";
                         sql += ")";
                     }
-                    sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                    if(c.isPrimaryKey()) {
+                        throw new JFException("Sqlite does not support setting a column as primary");
+                    }
                     sql += c.isUnique() ? " UNIQUE " : "";
                     sql += ";";
+
+                    if(!t.getAddedForeignKeys().isEmpty()) {
+                        throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
+                    }
+
                     toReturn.add(new Pair<>(sql, null));
                 }
 
