@@ -3,12 +3,16 @@ package net.fasolato.jfmigrate.internal;
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SqliteDialectHelper extends GenericDialectHelper implements IDialectHelper{
+    private static Logger log = LogManager.getLogger(SqliteDialectHelper.class);
+
     @Override
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
@@ -271,6 +275,8 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                 if(!t.getAddedForeignKeys().isEmpty()) {
                     throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
                 }
+
+                log.warn("Sqlite does not support DROP COLUMN, so this will be a non reversible migration");
 
                 toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
