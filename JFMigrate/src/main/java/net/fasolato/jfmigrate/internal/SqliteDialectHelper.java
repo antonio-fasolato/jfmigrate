@@ -1,38 +1,38 @@
 package net.fasolato.jfmigrate.internal;
 
+import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class PGSqlDialectHelper extends GenericDialectHelper implements IDialectHelper {
+public class SqliteDialectHelper extends GenericDialectHelper implements IDialectHelper{
+    private static Logger log = LogManager.getLogger(SqliteDialectHelper.class);
+
+    @Override
     public String getDatabaseVersionTableExistenceCommand() {
         String sql = "";
 
-        sql += " SELECT count(*) as count from (  ";
-        sql += "  SELECT 1  ";
-        sql += "  FROM   pg_catalog.pg_class c  ";
-        sql += "  JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace  ";
-        sql += "  WHERE  1 = 1  ";
-//        sql += "   AND n.nspname = 'schema_name'  ";
-        sql += "   AND    c.relname = '" + JFMigrationConstants.DB_VERSION_TABLE_NAME + "'  ";
-        sql += " ) a;  ";
+        sql += String.format("select count(*) as count from ( SELECT 1 FROM sqlite_master WHERE type='table' AND name='%s' )", JFMigrationConstants.DB_VERSION_TABLE_NAME);
 
         return sql;
     }
 
+    @Override
     public String getDatabaseVersionCommand() {
-            String sql = "";
+        String sql = "";
 
-            sql += " select coalesce(max(version), 0) as version  ";
-            sql += " from jfmigratedbversion;  ";
+        sql += " select coalesce(max(version), 0) as version  ";
+        sql += " from jfmigratedbversion;  ";
 
-            return sql;
+        return sql;
     }
 
+    @Override
     public String getSearchDatabaseVersionCommand() {
         String sql = "";
 
@@ -45,6 +45,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return sql;
     }
 
+    @Override
     public String getVersionTableCreationCommand() {
         String sql = "";
 
@@ -57,6 +58,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return sql;
     }
 
+    @Override
     public String getInsertNewVersionCommand() {
         String sql = "";
 
@@ -68,6 +70,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return sql;
     }
 
+    @Override
     public String getDeleteVersionCommand() {
         String sql = "";
 
@@ -79,44 +82,17 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return sql;
     }
 
+    @Override
     public String[] getScriptCheckMigrationUpVersionCommand() {
-        List<String> toReturn = new ArrayList<String>();
-        String sql = "";
-
-        sql += " DO  \n";
-        sql += " $do$  \n";
-        sql += " BEGIN  \n";
-        sql += " 	if not exists (select * from jfmigratedbversion where version = ?) then  \n";
-        toReturn.add(sql);
-
-        sql = "";
-        sql += "     end if;  \n";
-        sql += " END  \n";
-        sql += " $do$;  \n";
-        toReturn.add(sql);
-
-        return toReturn.toArray(new String[toReturn.size()]);
+        return new String[0];
     }
 
+    @Override
     public String[] getScriptCheckMigrationDownVersionCommand() {
-        List<String> toReturn = new ArrayList<String>();
-        String sql = "";
-
-        sql += " DO  \n";
-        sql += " $do$  \n";
-        sql += " BEGIN  \n";
-        sql += " 	if exists (select * from jfmigratedbversion where version = ?) then  \n";
-        toReturn.add(sql);
-
-        sql = "";
-        sql += "     end if;  \n";
-        sql += " END  \n";
-        sql += " $do$;  \n";
-        toReturn.add(sql);
-
-        return toReturn.toArray(new String[toReturn.size()]);
+        return new String[0];
     }
 
+    @Override
     public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
         String sql = "";
@@ -130,28 +106,14 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
-                if (!c.isAutoIncrement()) {
-                    sql += c.getType() + " ";
-                    if (c.getPrecision() != null) {
-                        sql += "(" + c.getPrecision();
-                        sql += c.getScale() != null ? "," + c.getScale() : "";
-                        sql += ")";
-                    }
-                } else {
-                    String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
-                    String preSql;
-                    if(c.getAutoIncrementStartWith() == 1) {
-                        preSql = String.format(" CREATE SEQUENCE %s ", sequenceName);
-                    } else {
-                        preSql = String.format(" CREATE SEQUENCE %s START WITH %s ", sequenceName, c.getAutoIncrementStartWith());
-                    }
-                    if(c.getAutoIncrementStep() != 1) {
-                        preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
-                    }
-                    preSql += ";";
-                    toReturn.add(new Pair<>(preSql, null));
-
-                    sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
+                sql += c.getType() + " ";
+                if (c.getPrecision() != null) {
+                    sql += "(" + c.getPrecision();
+                    sql += c.getScale() != null ? "," + c.getScale() : "";
+                    sql += ")";
+                }
+                if (c.isAutoIncrement()) {
+                    sql += " AUTOINCREMENT ";
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
@@ -169,13 +131,9 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         if(!pks.isEmpty()) {
             sql += String.format(" ,PRIMARY KEY(%s)", Strings.join(pks, ','));
         }
-        sql += " );";
-        toReturn.add(new Pair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
-            sql = "";
-            sql += "ALTER TABLE " + k.getFromTable() + " ";
-            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
+            sql += " CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
             for (i = 0; i < k.getForeignColumns().size(); i++) {
                 String c = k.getForeignColumns().get(i);
                 sql += " " + c;
@@ -200,14 +158,15 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             if (k.isOnUpdateCascade()) {
                 sql += " ON UPDATE CASCADE ";
             }
-            sql += ";";
-
-            toReturn.add(new Pair<>(sql, null));
         }
+
+        sql += " );";
+        toReturn.add(new Pair<>(sql, null));
 
         return toReturn;
     }
 
+    @Override
     public String[] getIndexCreationCommand(Index i) {
         List<String> toReturn = new ArrayList<String>();
 
@@ -229,6 +188,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return toReturn.toArray(new String[toReturn.size()]);
     }
 
+    @Override
     public String[] getTableDropCommand(Table t) {
         String sql = "";
 
@@ -237,22 +197,21 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return new String[]{sql};
     }
 
+    @Override
     public String[] getIndexDropCommand(Index i) {
         String sql = "";
 
-        sql += " DROP INDEX " + i.getName() + " ;";
+        sql += String.format(" DROP INDEX %s ;", i.getName());
 
         return new String[]{sql};
     }
 
+    @Override
     public String[] getColumnDropCommand(Column c) {
-        String sql = "";
-
-        sql += " ALTER TABLE " + c.getTableName() + " DROP COLUMN " + c.getName() + " ;";
-
-        return new String[]{sql};
+        throw new JFException("Sqlite does not support DROP COLUMN");
     }
 
+    @Override
     public String[] getTableRenameCommand(Table t) {
         String sql = "";
 
@@ -261,6 +220,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return new String[]{sql};
     }
 
+    @Override
     public String[] getColumnRenameCommand(Column c) {
         String sql = "";
 
@@ -269,6 +229,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
         return new String[]{sql};
     }
 
+    @Override
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
@@ -302,12 +263,21 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                         sql += ")";
                     }
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    throw new JFException("Sqlite does not support adding a primary key column");
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
+
+                if(!t.getAddedForeignKeys().isEmpty()) {
+                    throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
+                }
+
+                log.warn("Sqlite does not support DROP COLUMN, so this will be a non reversible migration");
+
                 toReturn.add(new Pair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
@@ -337,9 +307,16 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                         sql += c.getScale() != null ? "," + c.getScale() : "";
                         sql += ")";
                     }
-                    sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                    if(c.isPrimaryKey()) {
+                        throw new JFException("Sqlite does not support setting a column as primary");
+                    }
                     sql += c.isUnique() ? " UNIQUE " : "";
                     sql += ";";
+
+                    if(!t.getAddedForeignKeys().isEmpty()) {
+                        throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
+                    }
+
                     toReturn.add(new Pair<>(sql, null));
                 }
 
@@ -353,42 +330,6 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     toReturn.add(new Pair<>(sql, null));
                 }
             }
-        }
-
-        return toReturn;
-    }
-
-    public List<Pair<String, Object[]>> getUpdateCommand(Data d) {
-        List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-
-        for (int i = 0; i < d.getData().size(); i++) {
-            Map<String, Object> m = d.getData().get(i);
-
-            String sql = "";
-            List<Object> values = new ArrayList<Object>();
-
-            sql += " UPDATE " + d.getTableName() + " SET ";
-            int j = 0;
-            for (String k : m.keySet()) {
-                sql += k + " = ? ";
-                values.add(m.get(k));
-                if (j < m.keySet().size() - 1) {
-                    sql += ", ";
-                }
-                j++;
-            }
-            if (!d.isAllRows()) {
-                sql += " WHERE 1 = 1 ";
-                for (Map<String, Object> w : d.getWhere()) {
-                    for (String k : w.keySet()) {
-                        sql += " AND " + k + " = ? ";
-                        values.add(w.get(k));
-                    }
-                }
-            }
-            sql += ";";
-
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
         }
 
         return toReturn;

@@ -1,12 +1,31 @@
 package net.fasolato.jfmigrate;
 
 /**
- * Created by fasolato on 21/03/2017.
+ * Enum to specify all database types managed by JFMigrate
  */
 public enum SqlDialect {
+    /**
+     * Microsoft Sql Server
+     */
     SQL_SERVER,
+    /**
+     * H2 database
+     */
     H2,
+    /**
+     * PostgreSql
+     */
     PGSQL,
+    /**
+     * Mysql and MariaDb
+     */
     MYSQL,
-    ORACLE
+    /**
+     * Oracle database
+     */
+    ORACLE,
+    /**
+     * SqLite
+     */
+    SQLITE
 }

@@ -1,7 +1,7 @@
 package net.fasolato.jfmigrate;
 
 /**
- * Created by fasolato on 04/04/2017.
+ * Exception returned by JFMigrate methods
  */
 public class JFException extends RuntimeException {
     public JFException() {

@@ -8,17 +8,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by fasolato on 14/04/2017.
+ * Class to add a generic SQL snippet/script to a migration
  */
 public class RawSql implements Change {
     private String rawSql;
     private boolean script;
 
+    /**
+     * Constructor
+     * @param rawSql The SQL code to execute.
+     * @param script If the code shoud be executed as a script
+     */
     public RawSql(String rawSql, boolean script) {
         this.rawSql = rawSql;
         this.script = script;
     }
 
+    /**
+     * Internal method used in generating the SQL code to be executed
+     * @param helper The database dialect helper class
+     * @return The list of queries and optional data to execute
+     */
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
         toReturn.add(new Pair<String, Object[]>(rawSql, null));

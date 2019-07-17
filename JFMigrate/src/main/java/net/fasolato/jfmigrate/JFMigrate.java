@@ -14,6 +14,9 @@ import java.io.Writer;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Main class to manage JFMigrate
+ */
 public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
 
@@ -21,6 +24,11 @@ public class JFMigrate {
     private SqlDialect dialect;
     private String schema;
 
+    /**
+     * Constructor that bootstraps JFMigrate.
+     *
+     * It basically reads a jfmigrate.properties file in the classpath and configures the library (database dialcet, connection string...)
+     */
     public JFMigrate() {
         Properties properties = new Properties();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -40,6 +48,8 @@ public class JFMigrate {
                 dialect = SqlDialect.MYSQL;
             } else if (configDialect.equalsIgnoreCase("oracle")) {
                 dialect = SqlDialect.ORACLE;
+            } else if (configDialect.equalsIgnoreCase("sqlite")) {
+                dialect = SqlDialect.SQLITE;
             }
         } catch (IOException e) {
             log.error(e);
@@ -48,10 +58,18 @@ public class JFMigrate {
         packages = new ArrayList<String>();
     }
 
+    /**
+     * Registers a package by name as a source of migration classes
+     * @param pkg The package name
+     */
     public void registerPackage(String pkg) {
         packages.add(pkg);
     }
 
+    /**
+     * Registers a package from a class object as a source of migration classes.
+     * @param clazz The class belonging to the package to use as a source
+     */
     public void registerPackage(Class<?> clazz) {
         packages.add(clazz.getPackage().getName());
     }
@@ -68,6 +86,8 @@ public class JFMigrate {
                 return new MysqlDialectHelper(schema);
             case ORACLE:
                 return new OracleDialectHelper();
+            case SQLITE:
+                return new SqliteDialectHelper();
             default:
                 throw new NotImplementedException();
         }
@@ -76,7 +96,7 @@ public class JFMigrate {
     private long getDatabaseVersion(IDialectHelper helper, Connection conn) throws SQLException {
         String versionTableExistence = helper.getDatabaseVersionTableExistenceCommand();
         boolean exists = true;
-        ResultSet rs;
+        ResultSet rs = null;
         PreparedStatement st = new LoggablePreparedStatement(conn, versionTableExistence);
         log.info("Executing{}{}", System.lineSeparator(), st);
         try {
@@ -94,6 +114,13 @@ public class JFMigrate {
             } else {
                 throw oracleException;
             }
+        } finally {
+            try {
+                rs.close();
+                st.close();
+            } catch(Exception ex) {
+                log.error("Error closing resultset/ststement", ex);
+            }
         }
         if (!exists) {
             createVersionTable(helper, conn);
@@ -110,6 +137,8 @@ public class JFMigrate {
         if (rs.next()) {
             dbVersion = rs.getLong(1);
         }
+        rs.close();
+        st.close();
         return dbVersion;
     }
 
@@ -118,22 +147,43 @@ public class JFMigrate {
 
         PreparedStatement st = new LoggablePreparedStatement(conn, createCommand);
         log.info("Executing{}{}", System.lineSeparator(), st);
-        st.executeUpdate();
-
+        st.execute();
     }
 
+    /**
+     * Method to start an UP migration running against a real database engine.
+     * @throws Exception
+     */
     public void migrateUp() throws Exception {
         migrateUp(-1, null, false);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param out The Writer to write the SQL code to
+     * @throws Exception
+     */
     public void migrateUp(Writer out) throws Exception {
         migrateUp(-1, out, false);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param out The Writer to write the SQL code to
+     * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
+     * @throws Exception
+     */
     public void migrateUp(Writer out, boolean createVersionInfoTable) throws Exception {
         migrateUp(-1, out, createVersionInfoTable);
     }
 
+    /**
+     * Method to start an UP migration with a Writer output (to write for example an output file).
+     * @param startMigrationNumber Force JFMigrate to start from this migration (the existence of this migration is tested anyway)
+     * @param out The Writer to write the SQL code to
+     * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
+     * @throws Exception
+     */
     public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
@@ -199,7 +249,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -216,7 +266,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -232,7 +282,7 @@ public class JFMigrate {
                         st.setString(2, m.getMigrationName());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
@@ -285,10 +335,21 @@ public class JFMigrate {
         }
     }
 
+    /**
+     * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     * @param targetMigration The migration number where to stop. The initial database state is migration 0.
+     * @throws Exception
+     */
     public void migrateDown(int targetMigration) throws Exception {
         migrateDown(targetMigration, null);
     }
 
+    /**
+     * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     * @param targetMigration The migration number where to stop. The initial database state is migration 0.
+     * @param out The Writer to write the SQL code to
+     * @throws Exception
+     */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
@@ -347,6 +408,8 @@ public class JFMigrate {
                             if (!rs.next()) {
                                 throw new Exception("Migration " + m.getMigrationNumber() + " not found in table " + JFMigrationConstants.DB_VERSION_TABLE_NAME);
                             }
+                            rs.close();
+                            st.close();
                         }
 
                         for (Change c : m.migration.getChanges()) {
@@ -360,7 +423,7 @@ public class JFMigrate {
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -370,7 +433,7 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getA());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
-                                        st.executeUpdate();
+                                        st.execute();
                                     } else {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
@@ -385,7 +448,7 @@ public class JFMigrate {
                         st.setLong(1, m.getMigrationNumber());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
-                            st.executeUpdate();
+                            st.execute();
                         } else {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
@@ -439,10 +502,18 @@ public class JFMigrate {
         }
     }
 
+    /**
+     * Retrieves the current schema, if set
+     * @return
+     */
     public String getSchema() {
         return schema;
     }
 
+    /**
+     * Sets the database schema to use (if applicable)
+     * @param schema
+     */
     public void setSchema(String schema) {
         this.schema = schema;
     }
