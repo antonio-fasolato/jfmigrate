@@ -4,6 +4,7 @@ import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -117,6 +118,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
     public List<Pair<String, Object[]>> getTableCreationCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+        List<String> primaryKeys = new ArrayList<>();
         String sql = "";
 
         sql += " CREATE TABLE ";
@@ -146,7 +148,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
                     sql += String.format(" IDENTITY(%s, %s) ", c.getAutoIncrementStartWith(), c.getAutoIncrementStep());
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    primaryKeys.add(c.getName());
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 sql += c.isNullable() ? "" : " NOT NULL ";
                 if(c.isDefaultValueSet()) {
@@ -156,6 +160,11 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                     sql += ", ";
                 }
             }
+        }
+        if(!primaryKeys.isEmpty()) {
+            sql += " PRIMARY KEY ( ";
+            sql += Strings.join(primaryKeys, ',');
+            sql+= " )";
         }
         sql += " );";
         toReturn.add(new Pair<>(sql, null));
