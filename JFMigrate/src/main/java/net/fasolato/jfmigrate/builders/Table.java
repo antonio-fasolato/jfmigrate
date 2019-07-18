@@ -145,11 +145,23 @@ public class Table implements Change {
      * @return The Table object for the fluent interface
      */
     public Table foreignColumn(String columnName) {
+        return foreignColumns(columnName);
+    }
+
+    /**
+     * The foreign key columns on the many side of the relationship
+     * @param columnNames The list of column names
+     * @return The Table object for the fluent interface
+     */
+    public Table foreignColumns(String... columnNames) {
         if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
-        addedForeignKeys.get(addedForeignKeys.size() - 1).getForeignColumns().add(columnName);
+        ForeignKey fk = addedForeignKeys.get(addedForeignKeys.size() - 1);
+        for(String c : columnNames) {
+            fk.getForeignColumns().add(c);
+        }
         return this;
     }
 
@@ -159,11 +171,23 @@ public class Table implements Change {
      * @return The Table object for the fluent interface
      */
     public Table primaryColumn(String columnName) {
+        return primaryColumns(columnName);
+    }
+
+    /**
+     * The primary key columns referenced by the foreign key
+     * @param columnNames The list of primary column names
+     * @return The Table object for the fluent interface
+     */
+    public Table primaryColumns(String... columnNames) {
         if (addedForeignKeys.isEmpty()) {
             throw new JFException("No foreign key defined");
         }
 
-        addedForeignKeys.get(addedForeignKeys.size() - 1).getPrimaryKeys().add(columnName);
+        ForeignKey fk = addedForeignKeys.get(addedForeignKeys.size() - 1);
+        for(String c : columnNames) {
+            fk.getPrimaryKeys().add(c);
+        }
         return this;
     }
 
