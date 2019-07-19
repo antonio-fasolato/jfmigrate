@@ -331,7 +331,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             toReturn.add(new Pair<>(sql, null));
 
             if(c.isDefaultValueSet()) {
-                sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_def DEFAULT %s FOR %s;", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
+                sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_%s_def DEFAULT %s FOR %s;", t.getName(), t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
                 toReturn.add(new Pair<>(sql, null));
             }
         }
