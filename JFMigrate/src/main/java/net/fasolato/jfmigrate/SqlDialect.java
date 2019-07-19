@@ -5,6 +5,10 @@ package net.fasolato.jfmigrate;
  */
 public enum SqlDialect {
     /**
+     * Placeholder value
+     */
+    NONE,
+    /**
      * Microsoft Sql Server
      */
     SQL_SERVER,

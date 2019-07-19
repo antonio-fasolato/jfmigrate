@@ -221,7 +221,7 @@ public class JFMigrate {
                 });
 
                 for (JFMigrationClass m : migrations) {
-                    if (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber)) {
+                    if (m.executeForDialect(dialect) && (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber))) {
                         log.debug("Applying migration UP {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.up();
 
@@ -301,7 +301,9 @@ public class JFMigrate {
                         }
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
-                        if (m.getMigrationNumber() <= dbVersion) {
+                        if(!m.executeForDialect(dialect)) {
+                            log.info("Skipping migration {} because DB dialect {} is explicitly skipped", m.getMigrationNumber(), dialect);
+                        } else if (m.getMigrationNumber() <= dbVersion) {
                             log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
                         } else {
                             log.info("Skipping migration {} because lower than selected start migration number ({})", m.getMigrationNumber(), startMigrationNumber);
@@ -381,7 +383,7 @@ public class JFMigrate {
                 });
 
                 for (JFMigrationClass m : migrations) {
-                    if (m.getMigrationNumber() <= dbVersion && m.getMigrationNumber() > targetMigration) {
+                    if (m.executeForDialect(dialect) && (m.getMigrationNumber() <= dbVersion && m.getMigrationNumber() > targetMigration)) {
                         log.debug("Applying migration DOWN {}({})", m.getMigrationName(), m.getMigrationNumber());
                         m.down();
 
@@ -468,7 +470,9 @@ public class JFMigrate {
 
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
-                        if (m.getMigrationNumber() > dbVersion) {
+                        if(!m.executeForDialect(dialect)) {
+                            log.info("Skipping migration {} because DB dialect {} is explicitly skipped", m.getMigrationNumber(), dialect);
+                        } else if (m.getMigrationNumber() > dbVersion) {
                             log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
                         } else {
                             log.debug("Skipped migration {}({}) because out of range (target version: {})", m.getMigrationName(), m.getMigrationNumber(), targetMigration);
