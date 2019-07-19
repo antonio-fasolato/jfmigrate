@@ -343,7 +343,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     toReturn.add(new Pair<>(sql, null));
                 }
 
-                if (c.isNullableCahnged()) {
+                if (c.isNullableChanged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
                     toReturn.add(new Pair<>(sql, null));
                 }

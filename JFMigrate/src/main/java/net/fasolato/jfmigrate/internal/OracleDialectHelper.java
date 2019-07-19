@@ -176,7 +176,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                     }
                     sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                     sql += c.isUnique() ? " UNIQUE " : "";
-                    if(c.isNullableCahnged()) {
+                    if(c.isNullableChanged()) {
                         sql += " " + (c.isNullable() ? "NULL " : "NOT NULL ");
                     }
                     sql += ")";
