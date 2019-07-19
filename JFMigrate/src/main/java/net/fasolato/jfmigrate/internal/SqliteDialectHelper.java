@@ -116,7 +116,9 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     sql += " AUTOINCREMENT ";
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -267,7 +269,9 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     throw new JFException("Sqlite does not support adding a primary key column");
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -320,7 +324,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     toReturn.add(new Pair<>(sql, null));
                 }
 
-                if (c.isNullableCahnged()) {
+                if (c.isNullableChanged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
                     toReturn.add(new Pair<>(sql, null));
                 }

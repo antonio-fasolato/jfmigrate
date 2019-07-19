@@ -117,7 +117,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     primaryKeys.add(c.getName());
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
@@ -265,7 +267,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     primaryKeys.add(c.getName());
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
@@ -290,7 +294,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     primaryKeys.add(c.getName());
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());

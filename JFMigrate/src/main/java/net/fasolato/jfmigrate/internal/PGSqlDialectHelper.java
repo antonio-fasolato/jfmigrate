@@ -154,7 +154,9 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -304,7 +306,9 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -343,7 +347,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     toReturn.add(new Pair<>(sql, null));
                 }
 
-                if (c.isNullableCahnged()) {
+                if (c.isNullableChanged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
                     toReturn.add(new Pair<>(sql, null));
                 }
