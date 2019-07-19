@@ -136,7 +136,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                     }
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     if(c.getDefaultValue() instanceof DefaultFunction) {
                         sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());
@@ -322,7 +324,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     if(c.getDefaultValue() instanceof DefaultFunction) {
                         sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());
@@ -356,7 +360,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     if(c.getDefaultValue() instanceof DefaultFunction) {
                         sql += String.format(" DEFAULT %s ", ((DefaultFunction) c.getDefaultValue()).getFunction());

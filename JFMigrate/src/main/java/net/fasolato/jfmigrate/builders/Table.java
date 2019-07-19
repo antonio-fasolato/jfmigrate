@@ -6,7 +6,6 @@ import net.fasolato.jfmigrate.internal.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -240,7 +239,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(true);
-        changes.get(changes.size() - 1).setNullableCahnged(true);
+        changes.get(changes.size() - 1).setNullableChanged(true);
         return this;
     }
 
@@ -254,7 +253,7 @@ public class Table implements Change {
         }
 
         changes.get(changes.size() - 1).setNullable(false);
-        changes.get(changes.size() - 1).setNullableCahnged(true);
+        changes.get(changes.size() - 1).setNullableChanged(true);
         return this;
     }
 

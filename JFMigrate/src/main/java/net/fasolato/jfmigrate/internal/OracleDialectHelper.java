@@ -80,7 +80,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (i < t.getChanges().size()) {
                     sql += ", ";
                 }
@@ -162,7 +164,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
@@ -176,7 +180,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                     }
                     sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                     sql += c.isUnique() ? " UNIQUE " : "";
-                    if(c.isNullableCahnged()) {
+                    if(c.isNullableChanged()) {
                         sql += " " + (c.isNullable() ? "NULL " : "NOT NULL ");
                     }
                     sql += ")";

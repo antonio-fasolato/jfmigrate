@@ -152,7 +152,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                     primaryKeys.add(c.getName());
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -301,7 +303,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
             } else if (c.getOperationType() == OperationType.alter) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -324,7 +328,9 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
             }
 
             sql += ";";

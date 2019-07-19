@@ -1,13 +1,10 @@
 package net.fasolato.jfmigrate.builders;
 
-import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
 import net.fasolato.jfmigrate.internal.Pair;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,7 +17,7 @@ public class Column implements Change {
     private OperationType operationType;
     private boolean primaryKey;
     private boolean unique;
-    private boolean nullableCahnged;
+    private boolean nullableChanged;
     private boolean nullable;
     private boolean identity;
     private boolean defaultValueSet;
@@ -294,12 +291,12 @@ public class Column implements Change {
         this.defaultValueSet = defaultValueSet;
     }
 
-    public boolean isNullableCahnged() {
-        return nullableCahnged;
+    public boolean isNullableChanged() {
+        return nullableChanged;
     }
 
-    public void setNullableCahnged(boolean nullableCahnged) {
-        this.nullableCahnged = nullableCahnged;
+    public void setNullableChanged(boolean nullableChanged) {
+        this.nullableChanged = nullableChanged;
     }
 
     public boolean isTypeChanged() {
