@@ -116,7 +116,9 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     sql += " AUTOINCREMENT ";
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
@@ -267,7 +269,9 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     throw new JFException("Sqlite does not support adding a primary key column");
                 }
                 sql += c.isUnique() ? " UNIQUE " : "";
-                sql += c.isNullable() ? "" : " NOT NULL ";
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
+                }
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
