@@ -59,4 +59,37 @@ public abstract class JFMigrationClass {
 
         return this.getClass().getSimpleName();
     }
+
+    /**
+     * Checks if the current dialect is compatible with what is specfied in the annotation
+     *
+     * @param dialect The current configured dialect
+     * @return Whether to execute the migration
+     */
+    public boolean executeForDialect(SqlDialect dialect) {
+        SqlDialect exclude = SqlDialect.NONE;
+        SqlDialect only = SqlDialect.NONE;
+
+        Annotation[] annotations = this.getClass().getAnnotations();
+        for (Annotation a : annotations) {
+            if (Migration.class.isAssignableFrom(a.annotationType())) {
+                Migration m = (Migration) a;
+                exclude = m.excludeDialect();
+                only = m.onlyDialect();
+            }
+        }
+
+        if (exclude != SqlDialect.NONE && only != SqlDialect.NONE) {
+            throw new JFException("excludeDialect and onlyDialect @Migration parameters cannot be set at the same time");
+        }
+
+        if (exclude == dialect) {
+            return false;
+        }
+        if (only != SqlDialect.NONE && only != dialect) {
+            return false;
+        }
+
+        return true;
+    }
 }

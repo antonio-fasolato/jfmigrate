@@ -22,4 +22,16 @@ public @interface Migration {
      * @return The description
      */
     String description() default "";
+
+    /**
+     * Optionally skips the migration if the database dialect is the one specified
+     * @return The dialect to skip
+     */
+    SqlDialect excludeDialect() default SqlDialect.NONE;
+
+    /**
+     * Optionally execute the migration only if the database dialect is the one specified
+     * @return The dialect to consider
+     */
+    SqlDialect onlyDialect() default SqlDialect.NONE;
 }
