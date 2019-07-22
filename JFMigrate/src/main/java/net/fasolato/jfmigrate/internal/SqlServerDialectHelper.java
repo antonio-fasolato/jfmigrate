@@ -273,9 +273,10 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
-        String sql = "";
+        String sql = null;
 
         for (Column c : t.getChanges()) {
+            sql = "";
             if(c.isAutoIncrement() && c.getType() == null) {
                 c.setType(JDBCType.INTEGER);
                 c.setTypeChanged(true);
