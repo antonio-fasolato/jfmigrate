@@ -273,14 +273,15 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
+        String sql = null;
 
         for (Column c : t.getChanges()) {
+            sql = "";
             if(c.isAutoIncrement() && c.getType() == null) {
                 c.setType(JDBCType.INTEGER);
                 c.setTypeChanged(true);
             }
 
-            String sql = "";
             if (c.getOperationType() == OperationType.create) {
                 sql += " ALTER TABLE ";
                 sql += t.getName();
@@ -340,6 +341,40 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_%s_def DEFAULT %s FOR %s;", t.getName(), t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
                 toReturn.add(new Pair<>(sql, null));
             }
+        }
+
+        for (ForeignKey k : t.getAddedForeignKeys()) {
+            sql = "";
+            sql += "ALTER TABLE " + k.getFromTable() + " ";
+            sql += "ADD CONSTRAINT " + k.getName() + " FOREIGN KEY ( ";
+            for (int i = 0; i < k.getForeignColumns().size(); i++) {
+                String c = k.getForeignColumns().get(i);
+                sql += " " + c;
+                if (i < k.getForeignColumns().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += " ) ";
+            sql += "    REFERENCES " + k.getToTable() + " ( ";
+            for (int i = 0; i < k.getPrimaryKeys().size(); i++) {
+                String c = k.getPrimaryKeys().get(i);
+                sql += " " + c;
+                if (i < k.getPrimaryKeys().size() - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += " ) ";
+
+            if (k.isOnDeleteCascade()) {
+                sql += " ON DELETE CASCADE ";
+            }
+            if (k.isOnUpdateCascade()) {
+                sql += " ON UPDATE CASCADE ";
+            }
+
+            sql += ";";
+
+            toReturn.add(new Pair<>(sql, null));
         }
 
         return toReturn;
