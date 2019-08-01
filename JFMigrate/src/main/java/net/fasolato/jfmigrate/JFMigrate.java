@@ -232,7 +232,7 @@ public class JFMigrate {
                             out.write(System.lineSeparator());
 
                             scriptVersionCheck = helper.getScriptCheckMigrationUpVersionCommand();
-                            if (scriptVersionCheck != null) {
+                            if (scriptVersionCheck != null && scriptVersionCheck.length != 0) {
                                 out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
                                 out.write(System.lineSeparator());
                             }
