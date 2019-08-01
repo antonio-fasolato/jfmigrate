@@ -62,16 +62,20 @@ public class JFMigrate {
      * Registers a package by name as a source of migration classes
      * @param pkg The package name
      */
-    public void registerPackage(String pkg) {
-        packages.add(pkg);
+    public void registerPackage(String... pkg) {
+        for(String p: pkg) {
+            packages.add(p);
+        }
     }
 
     /**
      * Registers a package from a class object as a source of migration classes.
      * @param clazz The class belonging to the package to use as a source
      */
-    public void registerPackage(Class<?> clazz) {
-        packages.add(clazz.getPackage().getName());
+    public void registerPackage(Class<?>... clazz) {
+        for(Class<?> c : clazz) {
+            packages.add(c.getPackage().getName());
+        }
     }
 
     private IDialectHelper getDialectHelper() {
