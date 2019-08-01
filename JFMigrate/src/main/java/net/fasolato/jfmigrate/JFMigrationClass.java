@@ -1,6 +1,9 @@
 package net.fasolato.jfmigrate;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Base class for all migrations. The extending classes must implement an up and down method to generate the UP or DOWN migration actions.
@@ -67,23 +70,23 @@ public abstract class JFMigrationClass {
      * @return Whether to execute the migration
      */
     public boolean executeForDialect(SqlDialect dialect) {
-        SqlDialect exclude = SqlDialect.NONE;
+        List<SqlDialect> exclude = new ArrayList<>();
         SqlDialect only = SqlDialect.NONE;
 
         Annotation[] annotations = this.getClass().getAnnotations();
         for (Annotation a : annotations) {
             if (Migration.class.isAssignableFrom(a.annotationType())) {
                 Migration m = (Migration) a;
-                exclude = m.excludeDialect();
+                exclude = Arrays.asList(m.excludeDialect());
                 only = m.onlyDialect();
             }
         }
 
-        if (exclude != SqlDialect.NONE && only != SqlDialect.NONE) {
+        if (exclude.size() != 0 && only != SqlDialect.NONE) {
             throw new JFException("excludeDialect and onlyDialect @Migration parameters cannot be set at the same time");
         }
 
-        if (exclude == dialect) {
+        if (exclude.contains(dialect)) {
             return false;
         }
         if (only != SqlDialect.NONE && only != dialect) {
