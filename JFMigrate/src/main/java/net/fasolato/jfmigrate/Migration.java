@@ -27,7 +27,7 @@ public @interface Migration {
      * Optionally skips the migration if the database dialect is the one specified
      * @return The dialect to skip
      */
-    SqlDialect excludeDialect() default SqlDialect.NONE;
+    SqlDialect[] excludeDialect() default {};
 
     /**
      * Optionally execute the migration only if the database dialect is the one specified
