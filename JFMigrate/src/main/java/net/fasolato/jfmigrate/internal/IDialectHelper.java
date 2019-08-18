@@ -4,6 +4,7 @@ import net.fasolato.jfmigrate.builders.Column;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.Index;
 import net.fasolato.jfmigrate.builders.Table;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
