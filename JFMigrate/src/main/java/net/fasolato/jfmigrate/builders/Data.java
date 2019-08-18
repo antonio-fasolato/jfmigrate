@@ -2,7 +2,7 @@ package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFMigrationFluent;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +92,7 @@ public class Data implements Change {
             case update:
                 return helper.getUpdateCommand(this);
             default:
-                return new ArrayList<Pair<String, Object[]>>();
+                return new ArrayList<>();
         }
     }
 

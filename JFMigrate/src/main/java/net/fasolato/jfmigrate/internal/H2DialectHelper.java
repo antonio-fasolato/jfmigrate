@@ -1,6 +1,8 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -133,9 +135,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
             sql += String.format(" , PRIMARY KEY(%s)", String.join(",", primaryKeys));
         }
         sql += " );";
-        toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+        toReturn.add(new ImmutablePair<>(sql, values.isEmpty() ? null : values.toArray()));
         if(postSql != null) {
-            toReturn.add(new Pair<>(postSql, null));
+            toReturn.add(new ImmutablePair<>(postSql, null));
         }
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
@@ -168,7 +170,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
             }
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -306,9 +308,9 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                 sql += String.format(" , PRIMARY KEY(%s)", String.join(",", primaryKeys));
             }
             sql += ";";
-            toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.isEmpty() ? null : values.toArray()));
             if(postSql != null) {
-                toReturn.add(new Pair<>(postSql, null));
+                toReturn.add(new ImmutablePair<>(postSql, null));
             }
         }
 
@@ -331,12 +333,12 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                 }
                 sql += ";";
 
-                toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+                toReturn.add(new ImmutablePair<String, Object[]>(sql, values.toArray()));
             }
         } else {
             String sql = " DELETE " + d.getTableName() + "; ";
 
-            toReturn.add(new Pair<String, Object[]>(sql, new Object[0]));
+            toReturn.add(new ImmutablePair<String, Object[]>(sql, new Object[0]));
         }
 
         return toReturn;
@@ -372,7 +374,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
             }
             sql += ";";
 
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<String, Object[]>(sql, values.toArray()));
         }
 
         return toReturn;

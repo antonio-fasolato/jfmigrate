@@ -3,6 +3,8 @@ package net.fasolato.jfmigrate.internal;
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -163,7 +165,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
         }
 
         sql += " );";
-        toReturn.add(new Pair<>(sql, null));
+        toReturn.add(new ImmutablePair<>(sql, null));
 
         return toReturn;
     }
@@ -254,7 +256,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                         preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
                     }
                     preSql += ";";
-                    toReturn.add(new Pair<>(preSql, null));
+                    toReturn.add(new ImmutablePair<>(preSql, null));
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 } else {
@@ -282,7 +284,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
 
                 log.warn("Sqlite does not support DROP COLUMN, so this will be a non reversible migration");
 
-                toReturn.add(new Pair<>(sql, null));
+                toReturn.add(new ImmutablePair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
                     String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
@@ -295,10 +297,10 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                         sql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
                     }
                     sql += ";";
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
 
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s'); ", t.getName(), c.getName(), sequenceName);
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 } else if (c.isTypeChanged()) {
                     sql = "";
                     sql += " ALTER TABLE ";
@@ -321,17 +323,17 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                         throw new JFException("Sqlite does not support ALTER TABLE ... ADD CONSTRAINT...");
                     }
 
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
 
                 if (c.isNullableChanged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
 
                 if (c.isDefaultValueSet()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
             }
         }

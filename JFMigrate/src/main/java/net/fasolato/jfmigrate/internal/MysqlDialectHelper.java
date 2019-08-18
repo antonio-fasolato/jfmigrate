@@ -2,6 +2,8 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -200,9 +202,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
 
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
-        toReturn.add(new Pair<>(sql, defaultValues.isEmpty() ? null : defaultValues.toArray()));
+        toReturn.add(new ImmutablePair<>(sql, defaultValues.isEmpty() ? null : defaultValues.toArray()));
         if(postSql != null) {
-            toReturn.add(new Pair<>(postSql, null));
+            toReturn.add(new ImmutablePair<>(postSql, null));
         }
 
         return toReturn;
@@ -375,9 +377,9 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.isEmpty() ? null : values.toArray()));
             if(postSql != null) {
-                toReturn.add(new Pair<>(postSql, null));
+                toReturn.add(new ImmutablePair<>(postSql, null));
             }
         }
 
@@ -415,7 +417,7 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
 
             sql += ";";
 
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;

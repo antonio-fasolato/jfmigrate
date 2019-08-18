@@ -2,6 +2,8 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -169,7 +171,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             sql+= " )";
         }
         sql += " );";
-        toReturn.add(new Pair<>(sql, null));
+        toReturn.add(new ImmutablePair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -202,7 +204,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -335,11 +337,11 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             }
 
             sql += ";";
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
 
             if(c.isDefaultValueSet()) {
                 sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_%s_def DEFAULT %s FOR %s;", t.getName(), t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
-                toReturn.add(new Pair<>(sql, null));
+                toReturn.add(new ImmutablePair<>(sql, null));
             }
         }
 
@@ -374,7 +376,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -411,7 +413,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;

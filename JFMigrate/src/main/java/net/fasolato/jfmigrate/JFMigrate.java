@@ -3,6 +3,7 @@ package net.fasolato.jfmigrate;
 import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.internal.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -247,9 +248,9 @@ public class JFMigrate {
                                 Data d = (Data) c;
 
                                 for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, commands.getA());
-                                    for (int iv = 0; iv < commands.getB().length; iv++) {
-                                        st.setObject(iv + 1, commands.getB()[iv]);
+                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    for (int iv = 0; iv < commands.getRight().length; iv++) {
+                                        st.setObject(iv + 1, commands.getRight()[iv]);
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
@@ -262,10 +263,10 @@ public class JFMigrate {
                                 }
                             } else {
                                 for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, commands.getA());
-                                    if (commands.getB() != null) {
-                                        for (int iv = 0; iv < commands.getB().length; iv++) {
-                                            st.setObject(iv + 1, commands.getB()[iv]);
+                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    if (commands.getRight() != null) {
+                                        for (int iv = 0; iv < commands.getRight().length; iv++) {
+                                            st.setObject(iv + 1, commands.getRight()[iv]);
                                         }
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
@@ -421,10 +422,10 @@ public class JFMigrate {
                         for (Change c : m.migration.getChanges()) {
                             for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
                                 if (Data.class.isAssignableFrom(c.getClass())) {
-                                    st = new LoggablePreparedStatement(conn, commands.getA());
-                                    if (commands.getB() != null) {
-                                        for (int i = 0; i < commands.getB().length; i++) {
-                                            st.setObject(i + 1, commands.getB()[i]);
+                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    if (commands.getRight() != null) {
+                                        for (int i = 0; i < commands.getRight().length; i++) {
+                                            st.setObject(i + 1, commands.getRight()[i]);
                                         }
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
@@ -436,7 +437,7 @@ public class JFMigrate {
                                         out.write(System.lineSeparator());
                                     }
                                 } else {
-                                    st = new LoggablePreparedStatement(conn, commands.getA());
+                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();

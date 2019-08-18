@@ -2,7 +2,8 @@ package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -452,12 +453,12 @@ public class Table implements Change {
                 return helper.getTableCreationCommand(this);
             case delete:
                 for (String s : helper.getTableDropCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<>(s, null));
                 }
                 break;
             case rename:
                 for (String s : helper.getTableRenameCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<String, Object[]>(s, null));
                 }
                 break;
             case alter:
