@@ -133,7 +133,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
                 if (!c.isAutoIncrement()) {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -299,7 +299,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -337,7 +337,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql += t.getName();
                     sql += " ALTER COLUMN ";
                     sql += c.getName() + " TYPE ";
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
