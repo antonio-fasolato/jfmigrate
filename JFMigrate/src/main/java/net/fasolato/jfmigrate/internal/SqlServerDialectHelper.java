@@ -131,16 +131,20 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
-                if(c.isAutoIncrement() && c.getType() == null) {
+                if(c.isAutoIncrement() && c.getType() == null && c.getRawType() == null) {
                     c.setType(JDBCType.INTEGER);
                     c.setTypeChanged(true);
                 }
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -279,7 +283,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
         for (Column c : t.getChanges()) {
             sql = "";
-            if(c.isAutoIncrement() && c.getType() == null) {
+            if(c.isAutoIncrement() && c.getType() == null && c.getRawType() == null) {
                 c.setType(JDBCType.INTEGER);
                 c.setTypeChanged(true);
             }
@@ -289,12 +293,16 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 sql += t.getName();
                 sql += " ADD ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -314,12 +322,16 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();

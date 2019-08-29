@@ -108,7 +108,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
-                sql += c.getType() + " ";
+                sql += c.getRawType() == null ?  c.getType() : c.getRawType() + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -260,7 +260,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ?  c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -307,7 +307,7 @@ public class SqliteDialectHelper extends GenericDialectHelper implements IDialec
                     sql += t.getName();
                     sql += " ALTER COLUMN ";
                     sql += c.getName() + " TYPE ";
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ?  c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";

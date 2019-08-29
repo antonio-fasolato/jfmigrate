@@ -116,19 +116,23 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                     c.setType(JDBCType.INTEGER);
                 }
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
                     sql += ")";
                 }
-                if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+                if (c.getPrecision() == null && c.getType() != null && c.getType().equals(JDBCType.VARCHAR)) {
                     throw new JFException("VARCHAR size is required in MySql");
                 }
                 if(c.isAutoIncrementChanged() && c.isAutoIncrement()) {
@@ -266,24 +270,28 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
     public String[] getColumnRenameCommand(Column c) {
         String sql = "";
 
-        if (c.getType() == null) {
+        if (c.getType() == null && c.getRawType() == null) {
             throw new JFException(String.format("Mysql rename column needs to specify the new column type. table: %s, column: %s", c.getTableName(), c.getName()));
         }
 
         sql += " ALTER TABLE " + c.getTableName() + " CHANGE " + c.getName() + " " + c.getNewName() + " ";
-        if (c.getType().equals(JDBCType.BOOLEAN)) {
-            sql += "BIT ";
-        } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-            sql += "DATETIME ";
+        if(c.getRawType() == null) {
+            if (c.getType().equals(JDBCType.BOOLEAN)) {
+                sql += "BIT ";
+            } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                sql += "DATETIME ";
+            } else {
+                sql += c.getType() + " ";
+            }
         } else {
-            sql += c.getType() + " ";
+            sql += c.getRawType() + " ";
         }
         if (c.getPrecision() != null) {
             sql += "(" + c.getPrecision();
             sql += c.getScale() != null ? "," + c.getScale() : "";
             sql += ")";
         }
-        if (c.getPrecision() == null && c.getType().equals(JDBCType.VARCHAR)) {
+        if (c.getPrecision() == null && c.getType() !=null && c.getType().equals(JDBCType.VARCHAR)) {
             throw new JFException("VARCHAR size is required in MySql");
         }
 
@@ -294,7 +302,7 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
-            if(c.isAutoIncrementChanged() && c.getType() == null) {
+            if(c.isAutoIncrementChanged() && c.getType() == null && c.getRawType() == null) {
                 c.setTypeChanged(true);
                 c.setType(JDBCType.INTEGER);
             }
@@ -306,12 +314,16 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += t.getName();
                 sql += " ADD ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -342,12 +354,16 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
                 sql += t.getName();
                 sql += " MODIFY ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();

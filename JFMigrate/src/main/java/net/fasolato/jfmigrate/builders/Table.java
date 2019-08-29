@@ -394,6 +394,18 @@ public class Table implements Change {
         return as(t, precision, null);
     }
 
+    public Table asRaw(String sql) {
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+
+        Column c = changes.get(changes.size() - 1);
+        c.setRawType(sql);
+        c.setTypeChanged(true);
+
+        return this;
+    }
+
     /**
      * Sets the current column type as a generic jdbc type
      * @param t The column type

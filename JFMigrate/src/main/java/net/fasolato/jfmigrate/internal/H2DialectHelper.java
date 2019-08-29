@@ -103,7 +103,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     c.setTypeChanged(true);
                     c.setType(JDBCType.INTEGER);
                 }
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " " + (c.getRawType() == null ?  c.getType() : c.getRawType()) + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -253,7 +253,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ADD COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " " + (c.getRawType() == null ?  c.getType() : c.getRawType()) + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -280,7 +280,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                 sql += " ALTER TABLE ";
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
-                sql += c.getName() + " " + c.getType() + " ";
+                sql += c.getName() + " " + (c.getRawType() == null ?  c.getType() : c.getRawType()) + " ";
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
                     sql += c.getScale() != null ? "," + c.getScale() : "";
