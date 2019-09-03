@@ -2,6 +2,8 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
@@ -131,7 +133,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
                 if (!c.isAutoIncrement()) {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -149,7 +151,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                         preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
                     }
                     preSql += ";";
-                    toReturn.add(new Pair<>(preSql, null));
+                    toReturn.add(new ImmutablePair<>(preSql, null));
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 }
@@ -172,7 +174,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             sql += String.format(" ,PRIMARY KEY(%s)", Strings.join(pks, ','));
         }
         sql += " );";
-        toReturn.add(new Pair<>(sql, null));
+        toReturn.add(new ImmutablePair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -204,7 +206,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             }
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -293,11 +295,11 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                         preSql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
                     }
                     preSql += ";";
-                    toReturn.add(new Pair<>(preSql, null));
+                    toReturn.add(new ImmutablePair<>(preSql, null));
 
                     sql += String.format(" int DEFAULT nextval('%s') ", sequenceName);
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -312,7 +314,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
-                toReturn.add(new Pair<>(sql, null));
+                toReturn.add(new ImmutablePair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
                     String sequenceName = String.format("seq_%s_%s", t.getName(), RandomStringUtils.random(8, "0123456789abcdef"));
@@ -325,17 +327,17 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                         sql += String.format("INCREMENT BY %s ", c.getAutoIncrementStep());
                     }
                     sql += ";";
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
 
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s'); ", t.getName(), c.getName(), sequenceName);
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 } else if (c.isTypeChanged()) {
                     sql = "";
                     sql += " ALTER TABLE ";
                     sql += t.getName();
                     sql += " ALTER COLUMN ";
                     sql += c.getName() + " TYPE ";
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() == null ? c.getType() : c.getRawType() + " ";
                     if (c.getPrecision() != null) {
                         sql += "(" + c.getPrecision();
                         sql += c.getScale() != null ? "," + c.getScale() : "";
@@ -344,17 +346,17 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                     sql += c.isUnique() ? " UNIQUE " : "";
                     sql += ";";
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
 
                 if (c.isNullableChanged()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s %s;", t.getName(), c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
 
                 if (c.isDefaultValueSet()) {
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
             }
         }
@@ -392,7 +394,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
             }
             sql += ";";
 
-            toReturn.add(new Pair<String, Object[]>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<String, Object[]>(sql, values.toArray()));
         }
 
         return toReturn;

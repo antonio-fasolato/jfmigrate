@@ -1,7 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class Column implements Change {
     private Object defaultValue;
     private boolean typeChanged;
     private JDBCType type;
+    private String rawType;
     private Integer precision;
     private Integer scale;
     private boolean autoIncrementChanged;
@@ -51,12 +53,12 @@ public class Column implements Change {
         switch (operationType) {
             case delete:
                 for (String s : helper.getColumnDropCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<>(s, null));
                 }
                 break;
             case rename:
                 for (String s : helper.getColumnRenameCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<String, Object[]>(s, null));
                 }
                 break;
         }
@@ -337,5 +339,13 @@ public class Column implements Change {
 
     public void setAutoIncrementStep(int autoIncrementStep) {
         this.autoIncrementStep = autoIncrementStep;
+    }
+
+    public String getRawType() {
+        return rawType;
+    }
+
+    public void setRawType(String rawType) {
+        this.rawType = rawType;
     }
 }

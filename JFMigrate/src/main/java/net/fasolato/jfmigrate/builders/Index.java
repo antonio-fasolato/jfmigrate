@@ -1,7 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,12 +69,12 @@ public class Index implements Change {
         switch (operationType) {
             case create:
                 for (String s : helper.getIndexCreationCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<>(s, null));
                 }
                 break;
             case delete:
                 for (String s : helper.getIndexDropCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<String, Object[]>(s, null));
                 }
                 break;
         }

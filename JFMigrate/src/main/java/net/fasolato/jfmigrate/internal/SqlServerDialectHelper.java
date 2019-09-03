@@ -2,6 +2,8 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -129,16 +131,20 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             i++;
             if (c.getOperationType() == OperationType.create) {
                 sql += c.getName() + " ";
-                if(c.isAutoIncrement() && c.getType() == null) {
+                if(c.isAutoIncrement() && c.getType() == null && c.getRawType() == null) {
                     c.setType(JDBCType.INTEGER);
                     c.setTypeChanged(true);
                 }
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -169,7 +175,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             sql+= " )";
         }
         sql += " );";
-        toReturn.add(new Pair<>(sql, null));
+        toReturn.add(new ImmutablePair<>(sql, null));
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
             sql = "";
@@ -202,7 +208,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -277,7 +283,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
         for (Column c : t.getChanges()) {
             sql = "";
-            if(c.isAutoIncrement() && c.getType() == null) {
+            if(c.isAutoIncrement() && c.getType() == null && c.getRawType() == null) {
                 c.setType(JDBCType.INTEGER);
                 c.setTypeChanged(true);
             }
@@ -287,12 +293,16 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 sql += t.getName();
                 sql += " ADD ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -312,12 +322,16 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
                 sql += t.getName();
                 sql += " ALTER COLUMN ";
                 sql += c.getName() + " ";
-                if (c.getType().equals(JDBCType.BOOLEAN)) {
-                    sql += "BIT ";
-                } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
-                    sql += "DATETIME ";
+                if(c.getRawType() == null) {
+                    if (c.getType().equals(JDBCType.BOOLEAN)) {
+                        sql += "BIT ";
+                    } else if (c.getType().equals(JDBCType.TIMESTAMP)) {
+                        sql += "DATETIME ";
+                    } else {
+                        sql += c.getType() + " ";
+                    }
                 } else {
-                    sql += c.getType() + " ";
+                    sql += c.getRawType() + " ";
                 }
                 if (c.getPrecision() != null) {
                     sql += "(" + c.getPrecision();
@@ -335,11 +349,11 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
             }
 
             sql += ";";
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
 
             if(c.isDefaultValueSet()) {
                 sql = String.format(" ALTER TABLE %s ADD CONSTRAINT %s_%s_def DEFAULT %s FOR %s;", t.getName(), t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()), c.getName());
-                toReturn.add(new Pair<>(sql, null));
+                toReturn.add(new ImmutablePair<>(sql, null));
             }
         }
 
@@ -374,7 +388,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -411,7 +425,7 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
 
             sql += ";";
 
-            toReturn.add(new Pair<>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;

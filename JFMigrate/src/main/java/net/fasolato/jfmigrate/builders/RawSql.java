@@ -1,7 +1,8 @@
 package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class RawSql implements Change {
      */
     public List<Pair<String, Object[]>> getSqlCommand(IDialectHelper helper) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<Pair<String, Object[]>>();
-        toReturn.add(new Pair<String, Object[]>(rawSql, null));
+        toReturn.add(new ImmutablePair<>(rawSql, null));
         return toReturn;
     }
 

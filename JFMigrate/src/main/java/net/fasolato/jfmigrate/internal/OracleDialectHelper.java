@@ -2,6 +2,8 @@ package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.builders.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,7 +73,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
             }
             i++;
             if (c.getOperationType() == OperationType.create) {
-                sql += String.format("%s %s ", c.getName(), c.getType());
+                sql += String.format("%s %s ", c.getName(), c.getRawType() == null ? c.getType() : c.getRawType());
                 if (c.getPrecision() != null) {
                     sql += String.format("(%s%s)", c.getPrecision(), c.getScale() != null ? "," + c.getScale() : "");
                 }
@@ -102,7 +104,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
         }
 
         sql += " )";
-        toReturn.add(new Pair<>(sql, null));
+        toReturn.add(new ImmutablePair<>(sql, null));
 
         return toReturn;
     }
@@ -158,7 +160,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 if(c.isAutoIncrement()) {
                     log.warn("Oracle does not support directly an autoincrement column (not in alla versions). You should manage this manually (sequence or trigger)");
                 }
-                sql += String.format("ALTER TABLE %s ADD %s %s ", t.getName(), c.getName(), c.getType());
+                sql += String.format("ALTER TABLE %s ADD %s %s ", t.getName(), c.getName(), c.getRawType() == null ? c.getType() : c.getRawType());
                 if (c.getPrecision() != null) {
                     sql += String.format(" (%s%s) ", c.getPrecision(), c.getScale() != null ? "," + c.getScale() : "");
                 }
@@ -171,10 +173,10 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
                 }
-                toReturn.add(new Pair<>(sql, values.isEmpty() ? null : values.toArray()));
+                toReturn.add(new ImmutablePair<>(sql, values.isEmpty() ? null : values.toArray()));
             } else if (c.getOperationType() == OperationType.alter) {
                 if(c.isTypeChanged()) {
-                    sql = String.format("ALTER TABLE %s MODIFY (%s %s", t.getName(), c.getName(), c.getType());
+                    sql = String.format("ALTER TABLE %s MODIFY (%s %s", t.getName(), c.getName(), c.getRawType() == null ? c.getType() : c.getRawType());
                     if (c.getPrecision() != null) {
                         sql += String.format("(%s%s)", c.getPrecision(), c.getScale() != null ? "," + c.getScale() : "");
                     }
@@ -184,17 +186,17 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                         sql += " " + (c.isNullable() ? "NULL " : "NOT NULL ");
                     }
                     sql += ")";
-                    toReturn.add(new Pair<>(sql, null));
+                    toReturn.add(new ImmutablePair<>(sql, null));
                 }
 
                 if(c.isDefaultValueSet()) {
                     sql = String.format("ALTER TABLE %s MODIFY (%s ", t.getName(), c.getName());
                     if(c.getDefaultValue() != null) {
                         sql += "SET DEFAULT ?) ";
-                        toReturn.add(new Pair<>(sql, new Object[]{c.getDefaultValue()}));
+                        toReturn.add(new ImmutablePair<>(sql, new Object[]{c.getDefaultValue()}));
                     } else {
                         sql += "DROP DEFAULT";
-                        toReturn.add(new Pair<>(sql, null));
+                        toReturn.add(new ImmutablePair<>(sql, null));
                     }
                 }
             }
@@ -234,7 +236,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 }
             }
 
-            toReturn.add(new Pair<>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;

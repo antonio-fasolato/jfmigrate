@@ -1,6 +1,8 @@
 package net.fasolato.jfmigrate.internal;
 
 import net.fasolato.jfmigrate.builders.Data;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +39,7 @@ public abstract class GenericDialectHelper implements IDialectHelper {
 
             sql += String.format(" INSERT INTO %s (%s) VALUES (%s)%s ", d.getTableName(), String.join(",", m.keySet()), String.join(",", Collections.nCopies(m.keySet().size(), "?")), querySeparator);
 
-            toReturn.add(new Pair<>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;
@@ -57,12 +59,12 @@ public abstract class GenericDialectHelper implements IDialectHelper {
                 }
                 sql += querySeparator;
 
-                toReturn.add(new Pair<>(sql, values.toArray()));
+                toReturn.add(new ImmutablePair<>(sql, values.toArray()));
             }
         } else {
             String sql = String.format(" DELETE FROM %s%s ", d.getTableName(), querySeparator);
 
-            toReturn.add(new Pair<>(sql, null));
+            toReturn.add(new ImmutablePair<>(sql, null));
         }
 
         return toReturn;
@@ -98,7 +100,7 @@ public abstract class GenericDialectHelper implements IDialectHelper {
             }
             sql += querySeparator;
 
-            toReturn.add(new Pair<>(sql, values.toArray()));
+            toReturn.add(new ImmutablePair<>(sql, values.toArray()));
         }
 
         return toReturn;

@@ -2,7 +2,8 @@ package net.fasolato.jfmigrate.builders;
 
 import net.fasolato.jfmigrate.JFException;
 import net.fasolato.jfmigrate.internal.IDialectHelper;
-import net.fasolato.jfmigrate.internal.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
@@ -393,6 +394,18 @@ public class Table implements Change {
         return as(t, precision, null);
     }
 
+    public Table asRaw(String sql) {
+        if (changes.isEmpty()) {
+            throw new JFException("No column defined");
+        }
+
+        Column c = changes.get(changes.size() - 1);
+        c.setRawType(sql);
+        c.setTypeChanged(true);
+
+        return this;
+    }
+
     /**
      * Sets the current column type as a generic jdbc type
      * @param t The column type
@@ -452,12 +465,12 @@ public class Table implements Change {
                 return helper.getTableCreationCommand(this);
             case delete:
                 for (String s : helper.getTableDropCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<>(s, null));
                 }
                 break;
             case rename:
                 for (String s : helper.getTableRenameCommand(this)) {
-                    toReturn.add(new Pair<String, Object[]>(s, null));
+                    toReturn.add(new ImmutablePair<String, Object[]>(s, null));
                 }
                 break;
             case alter:
