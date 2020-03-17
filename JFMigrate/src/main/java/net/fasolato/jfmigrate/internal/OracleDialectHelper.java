@@ -30,7 +30,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
 
     @Override
     public String getSearchDatabaseVersionCommand() {
-        return String.format(" select * from %s where version = ?; ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
+        return String.format(" select * from %s where version = ? ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }
 
     @Override
