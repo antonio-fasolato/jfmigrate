@@ -194,6 +194,11 @@ public class JFMigrate {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
+        String rowSeparator = "";
+        if(dialect == SqlDialect.ORACLE && out != null) {
+            rowSeparator = ";";
+        }
+
         Connection conn = null;
         try {
             conn = dbHelper.getConnection();
@@ -206,7 +211,7 @@ public class JFMigrate {
                 out.write("-- Version table");
                 out.write(System.lineSeparator());
                 out.write(System.lineSeparator());
-                out.write(helper.getVersionTableCreationCommand());
+                out.write(helper.getVersionTableCreationCommand() + rowSeparator);
                 out.write(System.lineSeparator());
                 out.write(System.lineSeparator());
                 out.write("--------------------------------------------");
@@ -240,7 +245,7 @@ public class JFMigrate {
 
                             scriptVersionCheck = helper.getScriptCheckMigrationUpVersionCommand();
                             if (scriptVersionCheck != null && scriptVersionCheck.length != 0) {
-                                out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                                out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())) + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
                             out.flush();
@@ -263,7 +268,7 @@ public class JFMigrate {
                                     if (out == null) {
                                         st.execute();
                                     } else {
-                                        out.write(st.toString().trim());
+                                        out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
                                         out.flush();
@@ -285,7 +290,7 @@ public class JFMigrate {
                                     if (out == null) {
                                         st.execute();
                                     } else {
-                                        out.write(st.toString().trim());
+                                        out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
                                         out.flush();
@@ -302,7 +307,7 @@ public class JFMigrate {
                         if (out == null) {
                             st.execute();
                         } else {
-                            out.write(st.toString().trim());
+                            out.write(st.toString().trim() + rowSeparator);
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
                             out.flush();
@@ -310,7 +315,7 @@ public class JFMigrate {
 
                         if (out != null) {
                             if (scriptVersionCheck != null) {
-                                out.write(scriptVersionCheck[1]);
+                                out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
                             out.write("--------------------------------------------");
@@ -376,6 +381,11 @@ public class JFMigrate {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper();
 
+        String rowSeparator = "";
+        if(dialect == SqlDialect.ORACLE && out != null) {
+            rowSeparator = ";";
+        }
+
         Connection conn = null;
         try {
             conn = dbHelper.getConnection();
@@ -417,7 +427,7 @@ public class JFMigrate {
 
                         scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
                         if (out != null && scriptVersionCheck != null) {
-                            out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
+                            out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())) + rowSeparator);
                             out.write(System.lineSeparator());
                             out.flush();
                         }
@@ -453,7 +463,7 @@ public class JFMigrate {
                                     if (out == null) {
                                         st.execute();
                                     } else {
-                                        out.write(st.toString().trim());
+                                        out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
                                         out.flush();
@@ -464,7 +474,7 @@ public class JFMigrate {
                                     if (out == null) {
                                         st.execute();
                                     } else {
-                                        out.write(st.toString().trim());
+                                        out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
                                         out.flush();
@@ -480,7 +490,7 @@ public class JFMigrate {
                         if (out == null) {
                             st.execute();
                         } else {
-                            out.write(st.toString().trim());
+                            out.write(st.toString().trim() + rowSeparator);
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
                             out.flush();
@@ -488,7 +498,7 @@ public class JFMigrate {
 
                         if (out != null) {
                             if (scriptVersionCheck != null) {
-                                out.write(scriptVersionCheck[1]);
+                                out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
                             out.write("--------------------------------------------");
