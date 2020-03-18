@@ -122,8 +122,10 @@ public class JFMigrate {
             }
         } finally {
             try {
-                rs.close();
-                st.close();
+                if(rs != null) {
+                    rs.close();
+                    st.close();
+                }
             } catch(Exception ex) {
                 log.error("Error closing resultset/ststement", ex);
             }
