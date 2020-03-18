@@ -46,7 +46,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
 
     @Override
     public String getDeleteVersionCommand() {
-        return String.format(" DELETE FROM \"$s\" WHERE \"version\" = ? ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
+        return String.format(" DELETE FROM \"%s\" WHERE \"version\" = ? ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }
 
     // TODO Implement
