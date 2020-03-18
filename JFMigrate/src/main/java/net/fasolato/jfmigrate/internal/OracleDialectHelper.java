@@ -7,10 +7,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.sql.JDBCType;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class OracleDialectHelper extends GenericDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(OracleDialectHelper.class);
@@ -168,8 +167,14 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
-                    values.add(c.getDefaultValue());
+                    if(c.getType() == JDBCType.TIMESTAMP) {
+                        sql += " DEFAULT TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') ";
+                        SimpleDateFormat sd = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+                        values.add(sd.format(c.getDefaultValue()));
+                    } else {
+                        sql += " DEFAULT ? ";
+                        values.add(c.getDefaultValue());
+                    }
                 }
                 if(c.isNullableChanged()) {
                     sql += c.isNullable() ? "" : " NOT NULL ";
