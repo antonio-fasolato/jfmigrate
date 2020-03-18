@@ -6,11 +6,13 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 
 import java.sql.JDBCType;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class OracleDialectHelper extends GenericDialectHelper implements IDialectHelper {
     private static Logger log = LogManager.getLogger(OracleDialectHelper.class);
@@ -175,9 +177,10 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 sql += c.isUnique() ? " UNIQUE " : "";
                 if(c.isDefaultValueSet()) {
                     if(c.getType() == JDBCType.TIMESTAMP) {
-                        sql += " DEFAULT TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') ";
+                        // https://stackoverflow.com/questions/25489002/why-cannot-i-use-bind-variables-in-ddl-scl-statements-in-dynamic-sql
+                        // Oracle does not support query parameters in DDLs
                         SimpleDateFormat sd = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-                        values.add(sd.format(c.getDefaultValue()));
+                        sql += String.format(" DEFAULT TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS') ", sd.format(c.getDefaultValue()));
                     } else {
                         sql += " DEFAULT ? ";
                         values.add(c.getDefaultValue());
