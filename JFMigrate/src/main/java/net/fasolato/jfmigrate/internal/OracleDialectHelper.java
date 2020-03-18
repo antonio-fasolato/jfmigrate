@@ -167,12 +167,12 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 }
                 sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
                 sql += c.isUnique() ? " UNIQUE " : "";
-                if(c.isNullableChanged()) {
-                    sql += c.isNullable() ? "" : " NOT NULL ";
-                }
                 if(c.isDefaultValueSet()) {
                     sql += " DEFAULT ? ";
                     values.add(c.getDefaultValue());
+                }
+                if(c.isNullableChanged()) {
+                    sql += c.isNullable() ? "" : " NOT NULL ";
                 }
                 toReturn.add(new ImmutablePair<>(sql, values.isEmpty() ? null : values.toArray()));
             } else if (c.getOperationType() == OperationType.alter) {
