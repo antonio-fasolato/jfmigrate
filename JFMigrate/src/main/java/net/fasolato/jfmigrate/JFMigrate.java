@@ -14,6 +14,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 /**
  * Main class to manage JFMigrate
@@ -252,7 +253,11 @@ public class JFMigrate {
                                 for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     for (int iv = 0; iv < commands.getRight().length; iv++) {
-                                        st.setObject(iv + 1, commands.getRight()[iv]);
+                                        Object value = commands.getRight()[iv];
+                                        if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                            value = new java.sql.Date(((Date) value).getTime());
+                                        }
+                                        st.setObject(iv + 1, value);
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
@@ -269,7 +274,11 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     if (commands.getRight() != null) {
                                         for (int iv = 0; iv < commands.getRight().length; iv++) {
-                                            st.setObject(iv + 1, commands.getRight()[iv]);
+                                            Object value = commands.getRight()[iv];
+                                            if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                                value = new java.sql.Date(((Date) value).getTime());
+                                            }
+                                            st.setObject(iv + 1, value);
                                         }
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
@@ -433,7 +442,11 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     if (commands.getRight() != null) {
                                         for (int i = 0; i < commands.getRight().length; i++) {
-                                            st.setObject(i + 1, commands.getRight()[i]);
+                                            Object value = commands.getRight()[iv];
+                                            if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                                value = new java.sql.Date(((Date) value).getTime());
+                                            }
+                                            st.setObject(i + 1, value);
                                         }
                                     }
                                     log.info("Executing{}{}", System.lineSeparator(), st);
