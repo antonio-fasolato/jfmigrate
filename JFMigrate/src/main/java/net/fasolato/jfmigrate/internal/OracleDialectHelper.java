@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.sql.JDBCType;
 import java.text.SimpleDateFormat;
@@ -67,6 +68,7 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
 
         sql += String.format(" CREATE TABLE \"%s\" ( ", t.getName());
         int i = 0;
+        List<String> pks = new ArrayList<>();
         for (Column c : t.getChanges()) {
             if(c.isAutoIncrement()) {
                 log.warn("Oracle does not support directly an autoincrement column (not in alla versions). You should manage this manually (sequence or trigger)");
@@ -80,7 +82,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                 if (c.isDefaultValueSet()) {
                     sql += String.format(" DEFAULT %s ", getQueryValueFromObject(c.getDefaultValue()));
                 }
-                sql += c.isPrimaryKey() ? " PRIMARY KEY " : "";
+                if(c.isPrimaryKey()) {
+                    pks.add(c.getName());
+                }
                 sql += c.isUnique() ? " UNIQUE " : "";
                 if(c.isNullableChanged()) {
                     sql += c.isNullable() ? "" : " NOT NULL ";
@@ -89,6 +93,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
                     sql += ", ";
                 }
             }
+        }
+        if(!pks.isEmpty()) {
+            sql += String.format(" , CONSTRAINT \"pk_%s\" PRIMARY KEY (\"%s\")", t.getName(), String.join("\",\"", pks));
         }
 
         for (ForeignKey k : t.getAddedForeignKeys()) {
