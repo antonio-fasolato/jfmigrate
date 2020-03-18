@@ -212,6 +212,7 @@ public class JFMigrate {
                 out.write(System.lineSeparator());
                 out.write(System.lineSeparator());
                 out.write(System.lineSeparator());
+                out.flush();
             }
             log.info("Current database version: {}", dbVersion);
 
@@ -241,6 +242,7 @@ public class JFMigrate {
                                 out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
                                 out.write(System.lineSeparator());
                             }
+                            out.flush();
                         }
                         PreparedStatement st;
                         for (Change c : m.migration.getChanges()) {
@@ -259,6 +261,7 @@ public class JFMigrate {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
+                                        out.flush();
                                     }
                                 }
                             } else {
@@ -276,6 +279,7 @@ public class JFMigrate {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
+                                        out.flush();
                                     }
                                 }
                             }
@@ -292,6 +296,7 @@ public class JFMigrate {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
 
                         if (out != null) {
@@ -303,6 +308,7 @@ public class JFMigrate {
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
@@ -397,12 +403,14 @@ public class JFMigrate {
                             out.write(String.format("-- Migration down %s(%s)", m.getMigrationName(), m.getMigrationNumber()));
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
 
                         scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
                         if (out != null && scriptVersionCheck != null) {
                             out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())));
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
 
                         PreparedStatement st;
@@ -435,6 +443,7 @@ public class JFMigrate {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
+                                        out.flush();
                                     }
                                 } else {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
@@ -445,6 +454,7 @@ public class JFMigrate {
                                         out.write(st.toString().trim());
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
+                                        out.flush();
                                     }
                                 }
                             }
@@ -460,6 +470,7 @@ public class JFMigrate {
                             out.write(st.toString().trim());
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
 
                         if (out != null) {
@@ -471,6 +482,7 @@ public class JFMigrate {
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
                             out.write(System.lineSeparator());
+                            out.flush();
                         }
 
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
