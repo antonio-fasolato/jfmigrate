@@ -442,7 +442,7 @@ public class JFMigrate {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     if (commands.getRight() != null) {
                                         for (int i = 0; i < commands.getRight().length; i++) {
-                                            Object value = commands.getRight()[iv];
+                                            Object value = commands.getRight()[i];
                                             if(dialect == SqlDialect.ORACLE && value instanceof Date) {
                                                 value = new java.sql.Date(((Date) value).getTime());
                                             }

@@ -152,9 +152,9 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
     @Override
     public List<Pair<String, Object[]>> getAlterTableCommand(Table t) {
         List<Pair<String, Object[]>> toReturn = new ArrayList<>();
-        List <Object> values = new ArrayList<>();
 
         for (Column c : t.getChanges()) {
+            List <Object> values = new ArrayList<>();
             String sql = "";
             if (c.getOperationType() == OperationType.create) {
                 if(c.isAutoIncrement()) {
