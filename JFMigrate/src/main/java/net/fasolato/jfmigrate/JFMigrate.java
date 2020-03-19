@@ -2,6 +2,7 @@ package net.fasolato.jfmigrate;
 
 import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.builders.Data;
+import net.fasolato.jfmigrate.builders.RawSql;
 import net.fasolato.jfmigrate.internal.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +11,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.*;
 import java.util.*;
@@ -22,9 +22,12 @@ import java.util.Date;
 public class JFMigrate {
     private static Logger log = LogManager.getLogger(JFMigrate.class);
 
+    private static final String DEFAULT_SCRIPT_SEPARATOR = ";";
+
     private List<String> packages;
     private SqlDialect dialect;
     private String schema;
+    private String scriptSeparator;
 
     /**
      * Constructor that bootstraps JFMigrate.
@@ -52,6 +55,11 @@ public class JFMigrate {
                 dialect = SqlDialect.ORACLE;
             } else if (configDialect.equalsIgnoreCase("sqlite")) {
                 dialect = SqlDialect.SQLITE;
+            }
+
+            scriptSeparator = DEFAULT_SCRIPT_SEPARATOR;
+            if(properties.getProperty("jfmigrate.db.script_line_separator") != null) {
+                scriptSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
             }
         } catch (IOException e) {
             log.error(e);
@@ -274,6 +282,40 @@ public class JFMigrate {
                                         out.write(System.lineSeparator());
                                         out.write(System.lineSeparator());
                                         out.flush();
+                                    }
+                                }
+                            } else if(RawSql.class.isAssignableFrom(c.getClass())) {
+                                RawSql raw = (RawSql) c;
+                                if(((RawSql) c).isScript()) {
+                                    for (Pair<String, Object[]> command : c.getSqlCommand(helper)) {
+                                        String script = command.getLeft();
+
+                                        List<String> rows = ScriptParser.parseScript(script, scriptSeparator);
+                                        for(String row : rows) {
+                                            st = new LoggablePreparedStatement(conn, row);
+                                            log.info("Executing{}{}", System.lineSeparator(), st);
+                                            if (out == null) {
+                                                st.execute();
+                                            } else {
+                                                out.write(st.toString().trim() + rowSeparator);
+                                                out.write(System.lineSeparator());
+                                                out.write(System.lineSeparator());
+                                                out.flush();
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
+                                        st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        if (out == null) {
+                                            st.execute();
+                                        } else {
+                                            out.write(st.toString().trim() + rowSeparator);
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                            out.flush();
+                                        }
                                     }
                                 }
                             } else {
