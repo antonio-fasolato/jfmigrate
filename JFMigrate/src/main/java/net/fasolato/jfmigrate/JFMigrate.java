@@ -512,6 +512,36 @@ public class JFMigrate {
                                         out.write(System.lineSeparator());
                                         out.flush();
                                     }
+                                } else if(RawSql.class.isAssignableFrom(c.getClass())) {
+                                    RawSql raw = (RawSql) c;
+                                    if(((RawSql) c).isScript()) {
+                                        String script = commands.getLeft();
+
+                                        List<String> rows = ScriptParser.parseScript(script, scriptSeparator);
+                                        for(String row : rows) {
+                                            st = new LoggablePreparedStatement(conn, row);
+                                            log.info("Executing{}{}", System.lineSeparator(), st);
+                                            if (out == null) {
+                                                st.execute();
+                                            } else {
+                                                out.write(st.toString().trim() + rowSeparator);
+                                                out.write(System.lineSeparator());
+                                                out.write(System.lineSeparator());
+                                                out.flush();
+                                            }
+                                        }
+                                    } else {
+                                        st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                        log.info("Executing{}{}", System.lineSeparator(), st);
+                                        if (out == null) {
+                                            st.execute();
+                                        } else {
+                                            out.write(st.toString().trim() + rowSeparator);
+                                            out.write(System.lineSeparator());
+                                            out.write(System.lineSeparator());
+                                            out.flush();
+                                        }
+                                    }
                                 } else {
                                     st = new LoggablePreparedStatement(conn, commands.getLeft());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
