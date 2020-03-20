@@ -296,6 +296,7 @@ public class JFMigrate {
                                             log.info("Executing{}{}", System.lineSeparator(), st);
                                             if (out == null) {
                                                 st.execute();
+                                                st.close();
                                             } else {
                                                 out.write(st.toString().trim() + rowSeparator);
                                                 out.write(System.lineSeparator());
@@ -310,6 +311,7 @@ public class JFMigrate {
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
+                                            st.close();
                                         } else {
                                             out.write(st.toString().trim() + rowSeparator);
                                             out.write(System.lineSeparator());
@@ -523,6 +525,7 @@ public class JFMigrate {
                                             log.info("Executing{}{}", System.lineSeparator(), st);
                                             if (out == null) {
                                                 st.execute();
+                                                st.close();
                                             } else {
                                                 out.write(st.toString().trim() + rowSeparator);
                                                 out.write(System.lineSeparator());
@@ -535,6 +538,7 @@ public class JFMigrate {
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
+                                            st.close();
                                         } else {
                                             out.write(st.toString().trim() + rowSeparator);
                                             out.write(System.lineSeparator());
