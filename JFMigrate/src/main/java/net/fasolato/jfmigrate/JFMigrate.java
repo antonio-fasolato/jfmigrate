@@ -77,7 +77,10 @@ public class JFMigrate {
             log.error(e);
             throw new JFException("Error reading properties file", e);
         }
-        packages = new ArrayList<String>();
+    }
+
+    public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName) {
+        init(dialect, url, username, password, driverClassName, DEFAULT_SCRIPT_SEPARATOR);
     }
 
     public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName, String scriptLineSeparator) {
