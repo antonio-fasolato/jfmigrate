@@ -26,6 +26,10 @@ public class JFMigrate {
 
     private List<String> packages;
     private SqlDialect dialect;
+    private String driverClassName;
+    private String url;
+    private String username;
+    private String password;
     private String schema;
     private String scriptSeparator;
 
@@ -34,6 +38,7 @@ public class JFMigrate {
      *
      * It basically reads a jfmigrate.properties file in the classpath and configures the library (database dialcet, connection string...)
      */
+    @Deprecated
     public JFMigrate() {
         Properties properties = new Properties();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -57,15 +62,36 @@ public class JFMigrate {
                 dialect = SqlDialect.SQLITE;
             }
 
-            scriptSeparator = DEFAULT_SCRIPT_SEPARATOR;
+            String scriptLineSeparator = DEFAULT_SCRIPT_SEPARATOR;
             if(properties.getProperty("jfmigrate.db.script_line_separator") != null) {
-                scriptSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
+                scriptLineSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
             }
+
+            String configUrl = properties.getProperty("jfmigrate.db.url");
+            String configUsername = properties.getProperty("jfmigrate.db.username");
+            String configPassword = properties.getProperty("jfmigrate.db.password");
+            String configDriverClassName = properties.getProperty("jfmigrate.db.driverClassName");
+
+            init(dialect, configUrl, configUsername, configPassword, configDriverClassName, scriptLineSeparator);
         } catch (IOException e) {
             log.error(e);
             throw new JFException("Error reading properties file", e);
         }
         packages = new ArrayList<String>();
+    }
+
+    public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName, String scriptLineSeparator) {
+        init(dialect, url, username, password, driverClassName, scriptLineSeparator);
+    }
+
+    private void init(SqlDialect dialect, String url, String username, String password, String driverClassName, String scriptLineSeparator) {
+        this.dialect = dialect;
+        this.scriptSeparator = scriptLineSeparator;
+        this.driverClassName = driverClassName;
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        packages = new ArrayList<>();
     }
 
     /**
@@ -202,7 +228,7 @@ public class JFMigrate {
      */
     public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
-        DatabaseHelper dbHelper = new DatabaseHelper();
+        DatabaseHelper dbHelper = new DatabaseHelper(this.dialect.toString(), this.url, this.username, this.password, this.driverClassName);
 
         String rowSeparator = "";
         if(dialect == SqlDialect.ORACLE && out != null) {
@@ -425,7 +451,7 @@ public class JFMigrate {
      */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
-        DatabaseHelper dbHelper = new DatabaseHelper();
+        DatabaseHelper dbHelper = new DatabaseHelper(this.dialect.toString(), this.url, this.username, this.password, this.driverClassName);
 
         String rowSeparator = "";
         if(dialect == SqlDialect.ORACLE && out != null) {
