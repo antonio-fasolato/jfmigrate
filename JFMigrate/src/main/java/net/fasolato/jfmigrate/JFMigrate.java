@@ -265,11 +265,7 @@ public class JFMigrate {
                 log.debug("Migrating up from package {}", p);
 
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
-                Collections.sort(migrations, new Comparator<JFMigrationClass>() {
-                    public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                        return Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
-                    }
-                });
+                Collections.sort(migrations, Comparator.comparingLong(JFMigrationClass::getMigrationNumber));
 
                 for (JFMigrationClass m : migrations) {
                     if (m.executeForDialect(dialect) && (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber))) {
