@@ -311,28 +311,16 @@ public class JFMigrate {
                                     }
                                 }
                             } else if(RawSql.class.isAssignableFrom(c.getClass())) {
-                                if(((RawSql) c).isScript()) {
-                                    for (Pair<String, Object[]> command : c.getSqlCommand(helper)) {
+                                for (Pair<String, Object[]> command : c.getSqlCommand(helper)) {
+                                    List<String> rows = new ArrayList<>();
+                                    if (((RawSql) c).isScript()) {
                                         String script = command.getLeft();
-
-                                        List<String> rows = ScriptParser.parseScript(script, scriptSeparator);
-                                        for(String row : rows) {
-                                            st = new LoggablePreparedStatement(conn, row);
-                                            log.info("Executing{}{}", System.lineSeparator(), st);
-                                            if (out == null) {
-                                                st.execute();
-                                                st.close();
-                                            } else {
-                                                out.write(st.toString().trim() + rowSeparator);
-                                                out.write(System.lineSeparator());
-                                                out.write(System.lineSeparator());
-                                                out.flush();
-                                            }
-                                        }
+                                        rows = ScriptParser.parseScript(script, scriptSeparator);
+                                    } else {
+                                        rows.add(command.getLeft());
                                     }
-                                } else {
-                                    for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                        st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    for(String row : rows) {
+                                        st = new LoggablePreparedStatement(conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
@@ -540,25 +528,15 @@ public class JFMigrate {
                                         out.flush();
                                     }
                                 } else if(RawSql.class.isAssignableFrom(c.getClass())) {
+                                    List<String> rows = new ArrayList<>();
                                     if(((RawSql) c).isScript()) {
                                         String script = commands.getLeft();
-
-                                        List<String> rows = ScriptParser.parseScript(script, scriptSeparator);
-                                        for(String row : rows) {
-                                            st = new LoggablePreparedStatement(conn, row);
-                                            log.info("Executing{}{}", System.lineSeparator(), st);
-                                            if (out == null) {
-                                                st.execute();
-                                                st.close();
-                                            } else {
-                                                out.write(st.toString().trim() + rowSeparator);
-                                                out.write(System.lineSeparator());
-                                                out.write(System.lineSeparator());
-                                                out.flush();
-                                            }
-                                        }
+                                        rows = ScriptParser.parseScript(script, scriptSeparator);
                                     } else {
-                                        st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                        rows.add(commands.getLeft());
+                                    }
+                                    for(String row : rows) {
+                                        st = new LoggablePreparedStatement(conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
