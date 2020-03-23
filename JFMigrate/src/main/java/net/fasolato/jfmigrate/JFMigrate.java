@@ -265,11 +265,7 @@ public class JFMigrate {
                 log.debug("Migrating up from package {}", p);
 
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
-                Collections.sort(migrations, new Comparator<JFMigrationClass>() {
-                    public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                        return Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
-                    }
-                });
+                Collections.sort(migrations, Comparator.comparingLong(JFMigrationClass::getMigrationNumber));
 
                 for (JFMigrationClass m : migrations) {
                     if (m.executeForDialect(dialect) && (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber))) {
@@ -306,6 +302,7 @@ public class JFMigrate {
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();
+                                        st.close();
                                     } else {
                                         out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
@@ -314,7 +311,6 @@ public class JFMigrate {
                                     }
                                 }
                             } else if(RawSql.class.isAssignableFrom(c.getClass())) {
-                                RawSql raw = (RawSql) c;
                                 if(((RawSql) c).isScript()) {
                                     for (Pair<String, Object[]> command : c.getSqlCommand(helper)) {
                                         String script = command.getLeft();
@@ -364,6 +360,7 @@ public class JFMigrate {
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();
+                                        st.close();
                                     } else {
                                         out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
@@ -381,6 +378,7 @@ public class JFMigrate {
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
                             st.execute();
+                            st.close();
                         } else {
                             out.write(st.toString().trim() + rowSeparator);
                             out.write(System.lineSeparator());
@@ -474,6 +472,7 @@ public class JFMigrate {
 
             if (dbVersion <= 0) {
                 //No migration table or DB is at first migration, nothing to be done
+                log.debug("No migration table or DB is at the first migration. Nothing to be done");
                 return;
             }
 
@@ -481,11 +480,7 @@ public class JFMigrate {
                 log.debug("Migrating down from package {}", p);
 
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
-                Collections.sort(migrations, new Comparator<JFMigrationClass>() {
-                    public int compare(JFMigrationClass jfMigrationClass, JFMigrationClass t1) {
-                        return -1 * Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber());
-                    }
-                });
+                Collections.sort(migrations, (jfMigrationClass, t1) -> -1 * Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber()));
 
                 for (JFMigrationClass m : migrations) {
                     if (m.executeForDialect(dialect) && (m.getMigrationNumber() <= dbVersion && m.getMigrationNumber() > targetMigration)) {
@@ -537,6 +532,7 @@ public class JFMigrate {
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();
+                                        st.close();
                                     } else {
                                         out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
@@ -544,7 +540,6 @@ public class JFMigrate {
                                         out.flush();
                                     }
                                 } else if(RawSql.class.isAssignableFrom(c.getClass())) {
-                                    RawSql raw = (RawSql) c;
                                     if(((RawSql) c).isScript()) {
                                         String script = commands.getLeft();
 
@@ -580,6 +575,7 @@ public class JFMigrate {
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();
+                                        st.close();
                                     } else {
                                         out.write(st.toString().trim() + rowSeparator);
                                         out.write(System.lineSeparator());
@@ -596,6 +592,7 @@ public class JFMigrate {
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
                             st.execute();
+                            st.close();
                         } else {
                             out.write(st.toString().trim() + rowSeparator);
                             out.write(System.lineSeparator());
