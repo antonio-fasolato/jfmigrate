@@ -375,7 +375,7 @@ public class JFMigrate {
                         }
 
                         if (out != null) {
-                            if (scriptVersionCheck != null) {
+                            if (scriptVersionCheck != null && scriptVersionCheck.length != 0) {
                                 out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
