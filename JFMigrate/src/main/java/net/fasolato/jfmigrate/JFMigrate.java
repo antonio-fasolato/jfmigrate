@@ -484,7 +484,7 @@ public class JFMigrate {
                         }
 
                         scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
-                        if (out != null && scriptVersionCheck != null) {
+                        if (out != null && scriptVersionCheck != null && scriptVersionCheck.length > 0) {
                             out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())) + rowSeparator);
                             out.write(System.lineSeparator());
                             out.flush();
@@ -579,7 +579,7 @@ public class JFMigrate {
                         }
 
                         if (out != null) {
-                            if (scriptVersionCheck != null) {
+                            if (scriptVersionCheck != null && scriptVersionCheck.length > 0) {
                                 out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
