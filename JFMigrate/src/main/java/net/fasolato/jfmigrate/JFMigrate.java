@@ -4,10 +4,10 @@ import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.RawSql;
 import net.fasolato.jfmigrate.internal.*;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,6 +95,14 @@ public class JFMigrate {
         this.username = username;
         this.password = password;
         packages = new ArrayList<>();
+    }
+
+    private PreparedStatement createStatement(Writer out, Connection conn, String s) throws SQLException {
+        if(out == null) {
+            return new LoggablePreparedStatement(conn, s);
+        } else {
+            return new FakeLoggablePreparedStatement(s);
+        }
     }
 
     /**
@@ -291,7 +299,7 @@ public class JFMigrate {
                                 Data d = (Data) c;
 
                                 for (Pair<String, Object[]> commands : d.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    st = createStatement(out, conn, commands.getLeft());
                                     for (int iv = 0; iv < commands.getRight().length; iv++) {
                                         Object value = commands.getRight()[iv];
                                         if(dialect == SqlDialect.ORACLE && value instanceof Date) {
@@ -320,7 +328,7 @@ public class JFMigrate {
                                         rows.add(command.getLeft());
                                     }
                                     for(String row : rows) {
-                                        st = new LoggablePreparedStatement(conn, row);
+                                        st = createStatement(out, conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
@@ -335,7 +343,7 @@ public class JFMigrate {
                                 }
                             } else {
                                 for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
-                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    st = createStatement(out, conn, commands.getLeft());
                                     if (commands.getRight() != null) {
                                         for (int iv = 0; iv < commands.getRight().length; iv++) {
                                             Object value = commands.getRight()[iv];
@@ -360,7 +368,7 @@ public class JFMigrate {
                         }
 
                         String migrationVersionCommand = helper.getInsertNewVersionCommand();
-                        st = new LoggablePreparedStatement(conn, migrationVersionCommand);
+                        st = createStatement(out, conn, migrationVersionCommand);
                         st.setLong(1, m.getMigrationNumber());
                         st.setString(2, m.getMigrationName());
                         log.info("Executing{}{}", System.lineSeparator(), st);
@@ -375,7 +383,7 @@ public class JFMigrate {
                         }
 
                         if (out != null) {
-                            if (scriptVersionCheck != null) {
+                            if (scriptVersionCheck != null && scriptVersionCheck.length != 0) {
                                 out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }
@@ -484,7 +492,7 @@ public class JFMigrate {
                         }
 
                         scriptVersionCheck = helper.getScriptCheckMigrationDownVersionCommand();
-                        if (out != null && scriptVersionCheck != null) {
+                        if (out != null && scriptVersionCheck != null && scriptVersionCheck.length > 0) {
                             out.write(scriptVersionCheck[0].replaceAll("\\?", String.valueOf(m.getMigrationNumber())) + rowSeparator);
                             out.write(System.lineSeparator());
                             out.flush();
@@ -493,7 +501,7 @@ public class JFMigrate {
                         PreparedStatement st;
                         if (out == null) {
                             String testVersionSql = helper.getSearchDatabaseVersionCommand();
-                            st = new LoggablePreparedStatement(conn, testVersionSql);
+                            st = createStatement(null, conn, testVersionSql);
                             st.setLong(1, m.getMigrationNumber());
                             log.info("Executing{}{}", System.lineSeparator(), st);
                             ResultSet rs = st.executeQuery();
@@ -507,7 +515,7 @@ public class JFMigrate {
                         for (Change c : m.migration.getChanges()) {
                             for (Pair<String, Object[]> commands : c.getSqlCommand(helper)) {
                                 if (Data.class.isAssignableFrom(c.getClass())) {
-                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    st = createStatement(out, conn, commands.getLeft());
                                     if (commands.getRight() != null) {
                                         for (int i = 0; i < commands.getRight().length; i++) {
                                             Object value = commands.getRight()[i];
@@ -536,7 +544,7 @@ public class JFMigrate {
                                         rows.add(commands.getLeft());
                                     }
                                     for(String row : rows) {
-                                        st = new LoggablePreparedStatement(conn, row);
+                                        st = createStatement(out, conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
                                             st.execute();
@@ -549,7 +557,7 @@ public class JFMigrate {
                                         }
                                     }
                                 } else {
-                                    st = new LoggablePreparedStatement(conn, commands.getLeft());
+                                    st = createStatement(out, conn, commands.getLeft());
                                     log.info("Executing{}{}", System.lineSeparator(), st);
                                     if (out == null) {
                                         st.execute();
@@ -565,7 +573,7 @@ public class JFMigrate {
                         }
 
                         String migrationVersionCommand = helper.getDeleteVersionCommand();
-                        st = new LoggablePreparedStatement(conn, migrationVersionCommand);
+                        st = createStatement(out, conn, migrationVersionCommand);
                         st.setLong(1, m.getMigrationNumber());
                         log.info("Executing{}{}", System.lineSeparator(), st);
                         if (out == null) {
@@ -579,7 +587,7 @@ public class JFMigrate {
                         }
 
                         if (out != null) {
-                            if (scriptVersionCheck != null) {
+                            if (scriptVersionCheck != null && scriptVersionCheck.length > 0) {
                                 out.write(scriptVersionCheck[1] + rowSeparator);
                                 out.write(System.lineSeparator());
                             }

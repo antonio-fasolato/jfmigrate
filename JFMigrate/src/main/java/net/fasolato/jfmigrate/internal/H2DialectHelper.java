@@ -123,7 +123,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += c.isNullable() ? "" : " NOT NULL ";
                 }
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
+                    sql += " DEFAULT '?' ";
                     values.add(c.getDefaultValue());
                 }
                 if (i < t.getChanges().size()) {
@@ -273,7 +273,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += c.isNullable() ? "" : " NOT NULL ";
                 }
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
+                    sql += " DEFAULT '?' ";
                     values.add(c.getDefaultValue());
                 }
             } else if (c.getOperationType() == OperationType.alter) {
@@ -300,7 +300,7 @@ public class H2DialectHelper extends GenericDialectHelper implements IDialectHel
                     sql += c.isNullable() ? "" : " NOT NULL ";
                 }
                 if(c.isDefaultValueSet()) {
-                    sql += " DEFAULT ? ";
+                    sql += " DEFAULT '?' ";
                     values.add(c.getDefaultValue());
                 }
             }
