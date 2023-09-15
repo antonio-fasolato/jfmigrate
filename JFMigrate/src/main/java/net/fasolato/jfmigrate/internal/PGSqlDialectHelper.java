@@ -314,6 +314,8 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                 if (c.isDefaultValueSet()) {
                     sql += " DEFAULT " + getQueryValueFromObject(c.getDefaultValue()) + " ";
                 }
+
+                sql += ";";
                 toReturn.add(new ImmutablePair<>(sql, null));
             } else if (c.getOperationType() == OperationType.alter) {
                 if (c.isTypeChanged() && c.isAutoIncrement()) {
@@ -358,6 +360,7 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
                     sql = String.format(" ALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s; ", t.getName(), c.getName(), getQueryValueFromObject(c.getDefaultValue()));
                     toReturn.add(new ImmutablePair<>(sql, null));
                 }
+                sql += ";";
             }
         }
 
