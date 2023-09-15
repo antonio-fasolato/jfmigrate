@@ -20,7 +20,7 @@ import java.util.Date;
  * Main class to manage JFMigrate
  */
 public class JFMigrate {
-    private static Logger log = LogManager.getLogger(JFMigrate.class);
+    private static final Logger log = LogManager.getLogger(JFMigrate.class);
 
     private static final String DEFAULT_SCRIPT_SEPARATOR = ";";
 
@@ -110,9 +110,7 @@ public class JFMigrate {
      * @param pkg The package name
      */
     public void registerPackage(String... pkg) {
-        for(String p: pkg) {
-            packages.add(p);
-        }
+        Collections.addAll(packages, pkg);
     }
 
     /**
@@ -406,9 +404,7 @@ public class JFMigrate {
                 }
             }
 
-            if (conn != null) {
-                conn.commit();
-            }
+            conn.commit();
         } catch (Exception e) {
             if (conn != null) {
                 try {
@@ -476,7 +472,7 @@ public class JFMigrate {
                 log.debug("Migrating down from package {}", p);
 
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
-                Collections.sort(migrations, (jfMigrationClass, t1) -> -1 * Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber()));
+                migrations.sort((jfMigrationClass, t1) -> -1 * Long.compare(jfMigrationClass.getMigrationNumber(), t1.getMigrationNumber()));
 
                 for (JFMigrationClass m : migrations) {
                     if (m.executeForDialect(dialect) && (m.getMigrationNumber() <= dbVersion && m.getMigrationNumber() > targetMigration)) {
@@ -603,7 +599,7 @@ public class JFMigrate {
                         if(!m.executeForDialect(dialect)) {
                             log.info("Skipping migration {} because DB dialect {} is explicitly skipped", m.getMigrationNumber(), dialect);
                         } else if (m.getMigrationNumber() > dbVersion) {
-                            log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion, targetMigration);
+                            log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion);
                         } else {
                             log.debug("Skipped migration {}({}) because out of range (target version: {})", m.getMigrationName(), m.getMigrationNumber(), targetMigration);
                         }
