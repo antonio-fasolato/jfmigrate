@@ -68,6 +68,15 @@ public class MysqlDialectHelper extends GenericDialectHelper implements IDialect
         return sql;
     }
 
+    @Override
+    public String getVersionTableDeleteCommand() {
+        String sql = "";
+
+        sql += " DROP TABLE " + schema + "." + JFMigrationConstants.DB_VERSION_TABLE_NAME + "; ";
+
+        return sql;
+    }
+
     public String getInsertNewVersionCommand() {
         String sql = "";
 

@@ -442,17 +442,40 @@ public class JFMigrate {
      * @throws Exception Any exception thrown by called functions
      */
     public void migrateDown(int targetMigration) throws Exception {
-        migrateDown(targetMigration, null);
+        migrateDown(targetMigration, null, true);
     }
 
     /**
-     * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
      *
      * @param targetMigration The migration number where to stop. The initial database state is migration 0.
      * @param out             The Writer to write the SQL code to
      * @throws Exception Any exception thrown by called functions
      */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
+        migrateDown(targetMigration, out, true);
+    }
+
+    /**
+     * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     *
+     * @param targetMigration        The migration number where to stop. The initial database state is migration 0.
+     * @param deleteVersionInfoTable If true the last command executed is the deletion of the migration versions table
+     * @throws Exception Any exception thrown by called functions
+     */
+    public void migrateDown(int targetMigration, Boolean deleteVersionInfoTable) throws Exception {
+        migrateDown(targetMigration, null, deleteVersionInfoTable);
+    }
+
+    /**
+     * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     *
+     * @param targetMigration        The migration number where to stop. The initial database state is migration 0.
+     * @param out                    The Writer to write the SQL code to
+     * @param deleteVersionInfoTable If true the last command executed is the deletion of the migration versions table
+     * @throws Exception Any exception thrown by called functions
+     */
+    public void migrateDown(int targetMigration, Writer out, boolean deleteVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
         DatabaseHelper dbHelper = new DatabaseHelper(this.dialect.toString(), this.url, this.username, this.password, this.driverClassName);
 
@@ -614,6 +637,27 @@ public class JFMigrate {
                             log.debug("Skipped migration {}({}) because out of range (target version: {})", m.getMigrationName(), m.getMigrationNumber(), targetMigration);
                         }
                     }
+                }
+            }
+
+            // Version table
+            if (deleteVersionInfoTable) {
+                String deleteCommand = helper.getVersionTableDeleteCommand();
+                PreparedStatement st = createStatement(out, conn, deleteCommand);
+                log.info("Executing{}{}", System.lineSeparator(), st);
+                if (out == null) {
+                    st.execute();
+                    st.close();
+                } else {
+                    out.write("-- Versioning table");
+                    out.write(System.lineSeparator());
+                    out.write(System.lineSeparator());
+                    out.write(st.toString().trim() + rowSeparator);
+                    out.write(System.lineSeparator());
+                    out.write(System.lineSeparator());
+                    out.write("--------------------------------------------");
+                    out.write(System.lineSeparator());
+                    out.flush();
                 }
             }
 

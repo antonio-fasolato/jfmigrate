@@ -20,6 +20,7 @@ public interface IDialectHelper {
 
     String getVersionTableCreationCommand();
 
+    String getVersionTableDeleteCommand();
     String getInsertNewVersionCommand();
 
     String getDeleteVersionCommand();
