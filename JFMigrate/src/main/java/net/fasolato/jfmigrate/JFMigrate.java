@@ -40,43 +40,20 @@ public class JFMigrate {
      */
     @Deprecated
     public JFMigrate() {
-        Properties properties = new Properties();
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream stream = loader.getResourceAsStream("jfmigrate.properties");
-        try {
-            properties.load(stream);
-            String configDialect = properties.getProperty("jfmigrate.db.dialect");
+        PropertiesLoader propertiesLoader = new PropertiesLoader();
 
-            dialect = SqlDialect.NONE;
-            if (configDialect.equalsIgnoreCase("h2")) {
-                dialect = SqlDialect.H2;
-            } else if (configDialect.equalsIgnoreCase("sqlserver")) {
-                dialect = SqlDialect.SQL_SERVER;
-            } else if (configDialect.equalsIgnoreCase("pgsql")) {
-                dialect = SqlDialect.PGSQL;
-            } else if (configDialect.equalsIgnoreCase("mysql")) {
-                dialect = SqlDialect.MYSQL;
-            } else if (configDialect.equalsIgnoreCase("oracle")) {
-                dialect = SqlDialect.ORACLE;
-            } else if (configDialect.equalsIgnoreCase("sqlite")) {
-                dialect = SqlDialect.SQLITE;
-            }
-
-            String scriptLineSeparator = DEFAULT_SCRIPT_SEPARATOR;
-            if (properties.getProperty("jfmigrate.db.script_line_separator") != null) {
-                scriptLineSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
-            }
-
-            String configUrl = properties.getProperty("jfmigrate.db.url");
-            String configUsername = properties.getProperty("jfmigrate.db.username");
-            String configPassword = properties.getProperty("jfmigrate.db.password");
-            String configDriverClassName = properties.getProperty("jfmigrate.db.driverClassName");
-
-            init(dialect, configUrl, configUsername, configPassword, configDriverClassName, scriptLineSeparator);
-        } catch (IOException e) {
-            log.error(e);
-            throw new JFException("Error reading properties file", e);
+        String scriptLineSeparator = DEFAULT_SCRIPT_SEPARATOR;
+        if (propertiesLoader.getScriptLineSeparator() != null) {
+            scriptLineSeparator = propertiesLoader.getScriptLineSeparator();
         }
+
+        init(propertiesLoader.getDialect(),
+                propertiesLoader.getConfigUrl(),
+                propertiesLoader.getConfigUsername(),
+                propertiesLoader.getConfigPassword(),
+                propertiesLoader.getConfigDriverClassName(),
+                scriptLineSeparator
+        );
     }
 
     public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName) {
