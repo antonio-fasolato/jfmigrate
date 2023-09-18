@@ -246,11 +246,11 @@ public class JFMigrate {
 
         Connection conn = null;
         try {
-            conn = dbHelper.getConnection();
-            conn.setAutoCommit(false);
-
             long dbVersion = 0;
-            if (out == null) {
+            if(out == null) {
+                // We are not writing to file, we must connect to the DB to get the current DB version
+                conn = dbHelper.getConnection();
+                conn.setAutoCommit(false);
                 dbVersion = getDatabaseVersion(helper, conn);
             } else if (createVersionInfoTable) {
                 out.write("-- Version table");
@@ -404,7 +404,9 @@ public class JFMigrate {
                 }
             }
 
-            conn.commit();
+            if (conn != null) {
+                conn.commit();
+            }
         } catch (Exception e) {
             if (conn != null) {
                 try {
@@ -453,11 +455,11 @@ public class JFMigrate {
 
         Connection conn = null;
         try {
-            conn = dbHelper.getConnection();
-            conn.setAutoCommit(false);
-
             long dbVersion = Long.MAX_VALUE;
+
             if (out == null) {
+                conn = dbHelper.getConnection();
+                conn.setAutoCommit(false);
                 dbVersion = getDatabaseVersion(helper, conn);
             }
             log.info("Current database version: {}", dbVersion);
