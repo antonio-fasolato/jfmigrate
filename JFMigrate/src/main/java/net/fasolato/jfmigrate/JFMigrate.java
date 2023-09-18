@@ -35,7 +35,7 @@ public class JFMigrate {
 
     /**
      * Constructor that bootstraps JFMigrate.
-     *
+     * <p>
      * It basically reads a jfmigrate.properties file in the classpath and configures the library (database dialcet, connection string...)
      */
     @Deprecated
@@ -47,7 +47,7 @@ public class JFMigrate {
             properties.load(stream);
             String configDialect = properties.getProperty("jfmigrate.db.dialect");
 
-            dialect = SqlDialect.H2;
+            dialect = SqlDialect.NONE;
             if (configDialect.equalsIgnoreCase("h2")) {
                 dialect = SqlDialect.H2;
             } else if (configDialect.equalsIgnoreCase("sqlserver")) {
@@ -203,7 +203,7 @@ public class JFMigrate {
 
     /**
      * Method to start an UP migration running against a real database engine.
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateUp() throws Exception {
         migrateUp(-1, null, false);
@@ -212,7 +212,7 @@ public class JFMigrate {
     /**
      * Method to start an UP migration with a Writer output (to write for example an output file).
      * @param out The Writer to write the SQL code to
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateUp(Writer out) throws Exception {
         migrateUp(-1, out, false);
@@ -222,7 +222,7 @@ public class JFMigrate {
      * Method to start an UP migration with a Writer output (to write for example an output file).
      * @param out The Writer to write the SQL code to
      * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateUp(Writer out, boolean createVersionInfoTable) throws Exception {
         migrateUp(-1, out, createVersionInfoTable);
@@ -233,7 +233,7 @@ public class JFMigrate {
      * @param startMigrationNumber Force JFMigrate to start from this migration (the existence of this migration is tested anyway)
      * @param out The Writer to write the SQL code to
      * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateUp(int startMigrationNumber, Writer out, boolean createVersionInfoTable) throws Exception {
         IDialectHelper helper = getDialectHelper();
@@ -271,7 +271,7 @@ public class JFMigrate {
                 log.debug("Migrating up from package {}", p);
 
                 List<JFMigrationClass> migrations = ReflectionHelper.getAllMigrations(p);
-                Collections.sort(migrations, Comparator.comparingLong(JFMigrationClass::getMigrationNumber));
+                migrations.sort(Comparator.comparingLong(JFMigrationClass::getMigrationNumber));
 
                 for (JFMigrationClass m : migrations) {
                     if (m.executeForDialect(dialect) && (m.getMigrationNumber() > dbVersion && (startMigrationNumber == -1 || m.getMigrationNumber() >= startMigrationNumber))) {
@@ -432,7 +432,7 @@ public class JFMigrate {
     /**
      * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
      * @param targetMigration The migration number where to stop. The initial database state is migration 0.
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateDown(int targetMigration) throws Exception {
         migrateDown(targetMigration, null);
@@ -442,7 +442,7 @@ public class JFMigrate {
      * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
      * @param targetMigration The migration number where to stop. The initial database state is migration 0.
      * @param out The Writer to write the SQL code to
-     * @throws Exception
+     * @throws Exception Any exception thrown by called functions
      */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
         IDialectHelper helper = getDialectHelper();
@@ -636,7 +636,7 @@ public class JFMigrate {
 
     /**
      * Retrieves the current schema, if set
-     * @return
+     * @return The schema name
      */
     public String getSchema() {
         return schema;
@@ -644,7 +644,7 @@ public class JFMigrate {
 
     /**
      * Sets the database schema to use (if applicable)
-     * @param schema
+     * @param schema The schema name
      */
     public void setSchema(String schema) {
         this.schema = schema;
