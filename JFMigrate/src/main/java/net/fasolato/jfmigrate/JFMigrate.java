@@ -63,7 +63,7 @@ public class JFMigrate {
             }
 
             String scriptLineSeparator = DEFAULT_SCRIPT_SEPARATOR;
-            if(properties.getProperty("jfmigrate.db.script_line_separator") != null) {
+            if (properties.getProperty("jfmigrate.db.script_line_separator") != null) {
                 scriptLineSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
             }
 
@@ -98,7 +98,7 @@ public class JFMigrate {
     }
 
     private PreparedStatement createStatement(Writer out, Connection conn, String s) throws SQLException {
-        if(out == null) {
+        if (out == null) {
             return new LoggablePreparedStatement(conn, s);
         } else {
             return new FakeLoggablePreparedStatement(s);
@@ -107,6 +107,7 @@ public class JFMigrate {
 
     /**
      * Registers a package by name as a source of migration classes
+     *
      * @param pkg The package name
      */
     public void registerPackage(String... pkg) {
@@ -115,10 +116,11 @@ public class JFMigrate {
 
     /**
      * Registers a package from a class object as a source of migration classes.
+     *
      * @param clazz The class belonging to the package to use as a source
      */
     public void registerPackage(Class<?>... clazz) {
-        for(Class<?> c : clazz) {
+        for (Class<?> c : clazz) {
             packages.add(c.getPackage().getName());
         }
     }
@@ -165,11 +167,11 @@ public class JFMigrate {
             }
         } finally {
             try {
-                if(rs != null) {
+                if (rs != null) {
                     rs.close();
                     st.close();
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 log.error("Error closing resultset/ststement", ex);
             }
         }
@@ -203,6 +205,7 @@ public class JFMigrate {
 
     /**
      * Method to start an UP migration running against a real database engine.
+     *
      * @throws Exception Any exception thrown by called functions
      */
     public void migrateUp() throws Exception {
@@ -211,6 +214,7 @@ public class JFMigrate {
 
     /**
      * Method to start an UP migration with a Writer output (to write for example an output file).
+     *
      * @param out The Writer to write the SQL code to
      * @throws Exception Any exception thrown by called functions
      */
@@ -220,7 +224,8 @@ public class JFMigrate {
 
     /**
      * Method to start an UP migration with a Writer output (to write for example an output file).
-     * @param out The Writer to write the SQL code to
+     *
+     * @param out                    The Writer to write the SQL code to
      * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
      * @throws Exception Any exception thrown by called functions
      */
@@ -230,8 +235,9 @@ public class JFMigrate {
 
     /**
      * Method to start an UP migration with a Writer output (to write for example an output file).
-     * @param startMigrationNumber Force JFMigrate to start from this migration (the existence of this migration is tested anyway)
-     * @param out The Writer to write the SQL code to
+     *
+     * @param startMigrationNumber   Force JFMigrate to start from this migration (the existence of this migration is tested anyway)
+     * @param out                    The Writer to write the SQL code to
      * @param createVersionInfoTable Flag to decide whether to create the migration history table if missing
      * @throws Exception Any exception thrown by called functions
      */
@@ -240,14 +246,14 @@ public class JFMigrate {
         DatabaseHelper dbHelper = new DatabaseHelper(this.dialect.toString(), this.url, this.username, this.password, this.driverClassName);
 
         String rowSeparator = "";
-        if(dialect == SqlDialect.ORACLE && out != null) {
+        if (dialect == SqlDialect.ORACLE && out != null) {
             rowSeparator = ";";
         }
 
         Connection conn = null;
         try {
             long dbVersion = 0;
-            if(out == null) {
+            if (out == null) {
                 // We are not writing to file, we must connect to the DB to get the current DB version
                 conn = dbHelper.getConnection();
                 conn.setAutoCommit(false);
@@ -300,7 +306,7 @@ public class JFMigrate {
                                     st = createStatement(out, conn, commands.getLeft());
                                     for (int iv = 0; iv < commands.getRight().length; iv++) {
                                         Object value = commands.getRight()[iv];
-                                        if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                        if (dialect == SqlDialect.ORACLE && value instanceof Date) {
                                             value = new java.sql.Date(((Date) value).getTime());
                                         }
                                         st.setObject(iv + 1, value);
@@ -316,7 +322,7 @@ public class JFMigrate {
                                         out.flush();
                                     }
                                 }
-                            } else if(RawSql.class.isAssignableFrom(c.getClass())) {
+                            } else if (RawSql.class.isAssignableFrom(c.getClass())) {
                                 for (Pair<String, Object[]> command : c.getSqlCommand(helper)) {
                                     List<String> rows = new ArrayList<>();
                                     if (((RawSql) c).isScript()) {
@@ -325,7 +331,7 @@ public class JFMigrate {
                                     } else {
                                         rows.add(command.getLeft());
                                     }
-                                    for(String row : rows) {
+                                    for (String row : rows) {
                                         st = createStatement(out, conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
@@ -345,7 +351,7 @@ public class JFMigrate {
                                     if (commands.getRight() != null) {
                                         for (int iv = 0; iv < commands.getRight().length; iv++) {
                                             Object value = commands.getRight()[iv];
-                                            if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                            if (dialect == SqlDialect.ORACLE && value instanceof Date) {
                                                 value = new java.sql.Date(((Date) value).getTime());
                                             }
                                             st.setObject(iv + 1, value);
@@ -393,7 +399,7 @@ public class JFMigrate {
                         }
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
-                        if(!m.executeForDialect(dialect)) {
+                        if (!m.executeForDialect(dialect)) {
                             log.info("Skipping migration {} because DB dialect {} is explicitly skipped", m.getMigrationNumber(), dialect);
                         } else if (m.getMigrationNumber() <= dbVersion) {
                             log.info("Skipping migration {} because DB is newer", m.getMigrationNumber());
@@ -431,6 +437,7 @@ public class JFMigrate {
 
     /**
      * Method to start an DOWN migration running against a true database engine. JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     *
      * @param targetMigration The migration number where to stop. The initial database state is migration 0.
      * @throws Exception Any exception thrown by called functions
      */
@@ -440,8 +447,9 @@ public class JFMigrate {
 
     /**
      * Method to start an DOWN migration with a Writer output (to write for example an output file). JFMigrate starts from the current DB migration and executes DOWN migrations until it reaches targetMigration.
+     *
      * @param targetMigration The migration number where to stop. The initial database state is migration 0.
-     * @param out The Writer to write the SQL code to
+     * @param out             The Writer to write the SQL code to
      * @throws Exception Any exception thrown by called functions
      */
     public void migrateDown(int targetMigration, Writer out) throws Exception {
@@ -449,7 +457,7 @@ public class JFMigrate {
         DatabaseHelper dbHelper = new DatabaseHelper(this.dialect.toString(), this.url, this.username, this.password, this.driverClassName);
 
         String rowSeparator = "";
-        if(dialect == SqlDialect.ORACLE && out != null) {
+        if (dialect == SqlDialect.ORACLE && out != null) {
             rowSeparator = ";";
         }
 
@@ -517,7 +525,7 @@ public class JFMigrate {
                                     if (commands.getRight() != null) {
                                         for (int i = 0; i < commands.getRight().length; i++) {
                                             Object value = commands.getRight()[i];
-                                            if(dialect == SqlDialect.ORACLE && value instanceof Date) {
+                                            if (dialect == SqlDialect.ORACLE && value instanceof Date) {
                                                 value = new java.sql.Date(((Date) value).getTime());
                                             }
                                             st.setObject(i + 1, value);
@@ -533,15 +541,15 @@ public class JFMigrate {
                                         out.write(System.lineSeparator());
                                         out.flush();
                                     }
-                                } else if(RawSql.class.isAssignableFrom(c.getClass())) {
+                                } else if (RawSql.class.isAssignableFrom(c.getClass())) {
                                     List<String> rows = new ArrayList<>();
-                                    if(((RawSql) c).isScript()) {
+                                    if (((RawSql) c).isScript()) {
                                         String script = commands.getLeft();
                                         rows = ScriptParser.parseScript(script, scriptSeparator);
                                     } else {
                                         rows.add(commands.getLeft());
                                     }
-                                    for(String row : rows) {
+                                    for (String row : rows) {
                                         st = createStatement(out, conn, row);
                                         log.info("Executing{}{}", System.lineSeparator(), st);
                                         if (out == null) {
@@ -598,7 +606,7 @@ public class JFMigrate {
 
                         log.debug("Applied migration {}", m.getClass().getSimpleName());
                     } else {
-                        if(!m.executeForDialect(dialect)) {
+                        if (!m.executeForDialect(dialect)) {
                             log.info("Skipping migration {} because DB dialect {} is explicitly skipped", m.getMigrationNumber(), dialect);
                         } else if (m.getMigrationNumber() > dbVersion) {
                             log.debug("Skipped migration {}({}) because out of range (db version: {})", m.getMigrationName(), m.getMigrationNumber(), dbVersion);
@@ -636,6 +644,7 @@ public class JFMigrate {
 
     /**
      * Retrieves the current schema, if set
+     *
      * @return The schema name
      */
     public String getSchema() {
@@ -644,6 +653,7 @@ public class JFMigrate {
 
     /**
      * Sets the database schema to use (if applicable)
+     *
      * @param schema The schema name
      */
     public void setSchema(String schema) {
