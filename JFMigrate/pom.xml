@@ -6,7 +6,7 @@
 
     <groupId>net.fasolato.jfmigrate</groupId>
     <artifactId>JFMigrate</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.1</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Java fluent database migration library</description>
