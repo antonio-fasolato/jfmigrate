@@ -42,6 +42,11 @@ public class OracleDialectHelper extends GenericDialectHelper implements IDialec
     }
 
     @Override
+    public String getVersionTableDeleteCommand() {
+        return String.format(" DROP TABLE %s; ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
+    }
+
+    @Override
     public String getInsertNewVersionCommand() {
         return String.format("insert into \"%s\" (\"version\", \"appliedat\", \"migrationname\") values (?, CURRENT_TIMESTAMP, ?)", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }

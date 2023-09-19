@@ -50,13 +50,18 @@ public class PGSqlDialectHelper extends GenericDialectHelper implements IDialect
     public String getVersionTableCreationCommand() {
         String sql = "";
 
-        sql += " create table jfmigratedbversion (  ";
+        sql += " create table " + JFMigrationConstants.DB_VERSION_TABLE_NAME + " (  ";
         sql += "   version bigint primary key,  ";
         sql += "   appliedat timestamp not null,  ";
         sql += "   migrationname varchar(255) not null  ";
         sql += " );  ";
 
         return sql;
+    }
+
+    @Override
+    public String getVersionTableDeleteCommand() {
+        return String.format(" DROP TABLE %s; ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
     }
 
     public String getInsertNewVersionCommand() {

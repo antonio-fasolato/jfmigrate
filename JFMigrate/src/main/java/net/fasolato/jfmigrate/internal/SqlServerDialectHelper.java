@@ -66,6 +66,11 @@ public class SqlServerDialectHelper extends GenericDialectHelper implements IDia
         return sql;
     }
 
+    @Override
+    public String getVersionTableDeleteCommand() {
+        return String.format(" DROP TABLE %s; ", JFMigrationConstants.DB_VERSION_TABLE_NAME);
+    }
+
     public String getInsertNewVersionCommand() {
         String sql = "";
 
