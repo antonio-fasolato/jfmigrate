@@ -15,7 +15,7 @@ import java.util.Properties;
 public class PropertiesLoader implements ConfigurationLoader {
     private static final Logger log = LogManager.getLogger(PropertiesLoader.class);
 
-    private SqlDialect dialect;
+    private final SqlDialect dialect;
     private final String scriptLineSeparator;
     private final String configUrl;
     private final String configUsername;
@@ -36,21 +36,7 @@ public class PropertiesLoader implements ConfigurationLoader {
         }
 
         String configDialect = properties.getProperty("jfmigrate.db.dialect");
-
-        dialect = SqlDialect.NONE;
-        if (configDialect.equalsIgnoreCase("h2")) {
-            dialect = SqlDialect.H2;
-        } else if (configDialect.equalsIgnoreCase("sqlserver")) {
-            dialect = SqlDialect.SQL_SERVER;
-        } else if (configDialect.equalsIgnoreCase("pgsql")) {
-            dialect = SqlDialect.PGSQL;
-        } else if (configDialect.equalsIgnoreCase("mysql")) {
-            dialect = SqlDialect.MYSQL;
-        } else if (configDialect.equalsIgnoreCase("oracle")) {
-            dialect = SqlDialect.ORACLE;
-        } else if (configDialect.equalsIgnoreCase("sqlite")) {
-            dialect = SqlDialect.SQLITE;
-        }
+        dialect = Utilities.decodeDialect(configDialect);
 
         scriptLineSeparator = properties.getProperty("jfmigrate.db.script_line_separator");
         configUrl = properties.getProperty("jfmigrate.db.url");

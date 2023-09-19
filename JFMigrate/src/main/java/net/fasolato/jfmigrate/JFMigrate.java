@@ -3,6 +3,7 @@ package net.fasolato.jfmigrate;
 import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.RawSql;
+import net.fasolato.jfmigrate.config.CommandLineLoader;
 import net.fasolato.jfmigrate.config.PropertiesLoader;
 import net.fasolato.jfmigrate.internal.*;
 import org.apache.commons.lang3.NotImplementedException;
@@ -35,7 +36,10 @@ public class JFMigrate {
     /**
      * Constructor that bootstraps JFMigrate.
      * <p>
-     * It basically reads a jfmigrate.properties file in the classpath and configures the library (database dialcet, connection string...)
+     * It reads the configuration from a series of locations, in this order:
+     * - properties: any properties file containing the relevant keys. The properties are loaded with the same order than the classpath, so if a key is present in multiple files, the last one will overwrite the others
+     * - env variables
+     * - command line parameters
      */
     @Deprecated
     public JFMigrate() {
@@ -55,10 +59,64 @@ public class JFMigrate {
         );
     }
 
+    /**
+     * Constructor that takes a number of parameters to construct JFMigrate main object.
+     *
+     * @param args            The process command line arguments
+     * @param dialect         Database dialect. can be on of h2, sqlserver, pgsql, mysql, oracle, sqlite
+     * @param url             JDBC connection url
+     * @param username        database username
+     * @param password        database password
+     * @param driverClassName JDBC Driver class name to be dynamically loaded
+     */
+    public JFMigrate(String[] args, SqlDialect dialect, String url, String username, String password, String driverClassName) {
+        CommandLineLoader commandLineLoader = new CommandLineLoader(args);
+        init(dialect, url, username, password, driverClassName, DEFAULT_SCRIPT_SEPARATOR);
+    }
+
+    /**
+     * Constructor that takes a number of parameters to construct JFMigrate main object.
+     *
+     * @param dialect         Database dialect. can be on of h2, sqlserver, pgsql, mysql, oracle, sqlite
+     * @param url             JDBC connection url
+     * @param username        database username
+     * @param password        database password
+     * @param driverClassName JDBC Driver class name to be dynamically loaded
+     * @deprecated This constructor is deprecated. The similar one with the String[] args as first parameter or the empty constructor should instead be used
+     */
+    @Deprecated
     public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName) {
         init(dialect, url, username, password, driverClassName, DEFAULT_SCRIPT_SEPARATOR);
     }
 
+    /**
+     * Constructor that takes a number of parameters to construct JFMigrate main object.
+     *
+     * @param args                The process command line arguments
+     * @param dialect             Database dialect. can be on of h2, sqlserver, pgsql, mysql, oracle, sqlite
+     * @param url                 JDBC connection url
+     * @param username            database username
+     * @param password            database password
+     * @param driverClassName     JDBC Driver class name to be dynamically loaded
+     * @param scriptLineSeparator The character to use as command separator. Tipically ;
+     */
+    public JFMigrate(String[] args, SqlDialect dialect, String url, String username, String password, String driverClassName, String scriptLineSeparator) {
+        CommandLineLoader commandLineLoader = new CommandLineLoader(args);
+        init(dialect, url, username, password, driverClassName, DEFAULT_SCRIPT_SEPARATOR);
+    }
+
+    /**
+     * Constructor that takes a number of parameters to construct JFMigrate main object.
+     *
+     * @param dialect             Database dialect. can be on of h2, sqlserver, pgsql, mysql, oracle, sqlite
+     * @param url                 JDBC connection url
+     * @param username            database username
+     * @param password            database password
+     * @param driverClassName     JDBC Driver class name to be dynamically loaded
+     * @param scriptLineSeparator The character to use as command separator. Tipically ;
+     * @deprecated This constructor is deprecated. The similar one with the String[] args as first parameter or the empty constructor should instead be used
+     */
+    @Deprecated
     public JFMigrate(SqlDialect dialect, String url, String username, String password, String driverClassName, String scriptLineSeparator) {
         init(dialect, url, username, password, driverClassName, scriptLineSeparator);
     }
