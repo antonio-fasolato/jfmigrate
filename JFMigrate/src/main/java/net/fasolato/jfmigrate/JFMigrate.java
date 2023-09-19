@@ -3,6 +3,7 @@ package net.fasolato.jfmigrate;
 import net.fasolato.jfmigrate.builders.Change;
 import net.fasolato.jfmigrate.builders.Data;
 import net.fasolato.jfmigrate.builders.RawSql;
+import net.fasolato.jfmigrate.config.PropertiesLoader;
 import net.fasolato.jfmigrate.internal.*;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;

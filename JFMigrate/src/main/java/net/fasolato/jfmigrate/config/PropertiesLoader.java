@@ -1,5 +1,7 @@
-package net.fasolato.jfmigrate;
+package net.fasolato.jfmigrate.config;
 
+import net.fasolato.jfmigrate.JFException;
+import net.fasolato.jfmigrate.SqlDialect;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class PropertiesLoader {
+public class PropertiesLoader implements ConfigurationLoader {
     private static final Logger log = LogManager.getLogger(PropertiesLoader.class);
 
     private SqlDialect dialect;
