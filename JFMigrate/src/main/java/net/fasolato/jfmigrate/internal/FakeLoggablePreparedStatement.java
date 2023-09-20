@@ -5,13 +5,14 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 public class FakeLoggablePreparedStatement implements PreparedStatement {
-    private String command;
-    private Map<Integer, Object> values;
+    private final String command;
+    private final Map<Integer, Object> values;
 
     public FakeLoggablePreparedStatement(String s) {
         command = s;
@@ -24,6 +25,11 @@ public class FakeLoggablePreparedStatement implements PreparedStatement {
         for (Integer i : values.keySet()) {
             if (String.class.isAssignableFrom(values.get(i).getClass())) {
                 toReturn = toReturn.replaceFirst("\\?", "'" + values.get(i).toString() + "'");
+            } else if (Date.class.isAssignableFrom(values.get(i).getClass())) {
+                toReturn = toReturn.replaceFirst("\\?", "'" + values.get(i).toString() + "'");
+            } else if (java.util.Date.class.isAssignableFrom(values.get(i).getClass())) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                toReturn = toReturn.replaceFirst("\\?", "'" + sdf.format(values.get(i)) + "'");
             } else {
                 toReturn = toReturn.replaceFirst("\\?", values.get(i).toString());
             }
