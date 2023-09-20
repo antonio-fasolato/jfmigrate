@@ -12,31 +12,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptParser {
-    private static Logger log = LogManager.getLogger(ScriptParser.class);
+    private static final Logger log = LogManager.getLogger(ScriptParser.class);
 
     public static List<String> parseScript(String script, String delimiter) {
-        String delim = delimiter;
 
         List<String> commands = new ArrayList<>();
-        StringBuffer command = new StringBuffer();
+        StringBuilder command = new StringBuilder();
 
         String[] lines = script.split("\\R");
-        for(String line : lines) {
+        for (String line : lines) {
             String trimmedLine = line.trim();
-            if (trimmedLine.length() < 1) {
-                log.debug("Empty line");
-            } else if (trimmedLine.startsWith("--") || trimmedLine.startsWith("//")) {
-                log.debug("Stripped comment:{}{}", System.lineSeparator(), trimmedLine);
-            } else if (trimmedLine.endsWith(delim)) {
-                command.append(trimmedLine.substring(0, trimmedLine.lastIndexOf(delim)));
+            if (trimmedLine.isEmpty() || trimmedLine.startsWith("--") || trimmedLine.startsWith("//")) {
+                log.debug("Empty line or comment");
+                command.append(trimmedLine);
+                command.append("\n");
+            } else if (trimmedLine.endsWith(delimiter)) {
+                command.append(trimmedLine, 0, trimmedLine.lastIndexOf(delimiter) + 1);
                 commands.add(command.toString());
-                command = new StringBuffer();
+                command = new StringBuilder();
             } else {
                 command.append(trimmedLine);
                 command.append("\n");
             }
         }
-        if(command.length() != 0) {
+        if (command.length() != 0) {
             commands.add(command.toString());
         }
 
